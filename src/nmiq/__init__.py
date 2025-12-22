@@ -1,4 +1,6 @@
 # from .image import series_roi_calcs, roi_volumes
-from .core import add_things
+from .core import load_images
 
-__all__ = ["add_things"]
+from . import tasks
+
+__all__ = ["load_images"]
