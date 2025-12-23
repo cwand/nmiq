@@ -6,3 +6,4 @@ def summary(task_dict: dict[str, Any]):
     print(f"  Dimension: {image.GetDimension()}")
     print(f"  Size: {image.GetSize()}")
     print(f"  Spacing: {image.GetSpacing()}")
+    print(f"  Origin: {image.GetOrigin()}")
