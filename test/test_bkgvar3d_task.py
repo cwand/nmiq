@@ -68,11 +68,60 @@ class TestBkgVar3D_task(unittest.TestCase):
 
         with open(os.path.join('test', 'bkgvar3d_res.txt'), 'r') as f:
             lines = f.readlines()
-            print(lines)
             self.assertEqual(3, len(lines))
-            self.assertEqual("Result:\tN/A", lines[0].strip())
-            self.assertEqual("S.E.:\tN/A", lines[1].strip())
+            self.assertEqual("Result:\tnan", lines[0].strip())
+            self.assertEqual("S.E.:\tnan", lines[1].strip())
             self.assertEqual("K:\t1", lines[2].strip())
+
+
+    def test_bkg_var_result(self):
+
+        img = sitk.Image((6, 6, 16), sitk.sitkFloat32)
+        img.SetSpacing((1, 1, 1))
+        img.SetOrigin((0, 0, 0))
+
+        for x in range(6):
+            for y in range(6):
+                for z in range(0, 4):
+                    img.SetPixel(x, y, z, 1.0)
+        for x in range(6):
+            for y in range(6):
+                for z in range(4, 7):
+                    img.SetPixel(x, y, z, 3.0)
+        for x in range(6):
+            for y in range(6):
+                for z in range(7, 10):
+                    img.SetPixel(x, y, z, 4.0)
+        for x in range(6):
+            for y in range(6):
+                for z in range(10, 16):
+                    img.SetPixel(x, y, z, 7.0)
+
+        task_dict = {
+            'image': img,
+            'cylinder_start_z': 1.0,
+            'cylinder_end_z': 13.0,
+            'cylinder_center_x': 3.0,
+            'cylinder_center_y': 3.0,
+            'cylinder_radius': 1.5,
+            'roi_radius': 0.9,
+            'output_path': os.path.join('test')
+        }
+
+        nmiq.tasks.bkgvar3d(task_dict)
+
+        with open(os.path.join('test', 'bkgvar3d_res.txt'), 'r') as f:
+            lines = f.readlines()
+            self.assertEqual(3, len(lines))
+            line0 = lines[0].strip().split()
+            self.assertEqual("Result:", line0[0])
+            self.assertAlmostEqual(0.6666667, float(line0[1]), places=4)
+
+            line1 = lines[1].strip().split()
+            self.assertEqual("S.E.:", line1[0])
+            self.assertEqual(0.273424, float(line1[1]))
+
+            self.assertEqual("K:\t4", lines[2].strip())
 
 
 

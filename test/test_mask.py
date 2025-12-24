@@ -1,4 +1,8 @@
 import unittest
+
+import numpy as np
+import SimpleITK as sitk
+
 import nmiq.mask
 
 
@@ -209,4 +213,95 @@ class TestSpheresInCylinder3D(unittest.TestCase):
         self.assertEqual(img.GetPixel(5, 5, 5), 0)
         self.assertEqual(img.GetPixel(5, 4, 1), 1)
         self.assertEqual(img.GetPixel(5, 4, 0), 0)
+
+    def test_four_spheres(self):
+        img = nmiq.mask.spheres_in_cylinder_3d(
+            image_size=(19, 19, 19),
+            image_spacing=(1, 1, 1),
+            image_origin=(0, 0, 0),
+            cylinder_start_z=1.0,
+            cylinder_end_z=8.0,
+            cylinder_center_x=9.0,
+            cylinder_center_y=9.0,
+            cylinder_radius=8.0,
+            roi_radius=3.0
+        )
+
+        self.assertEqual(3, img.GetDimension())
+        self.assertEqual((1, 1, 1), img.GetSpacing())
+        self.assertEqual((0, 0, 0), img.GetOrigin())
+        self.assertEqual((19, 19, 19), img.GetSize())
+
+        self.assertEqual(4, np.max(sitk.GetArrayFromImage(img)))
+
+        # Sphere 1
+        self.assertEqual(img.GetPixel(9, 4, 4), 1) # Center voxel
+        self.assertEqual(img.GetPixel(12, 3, 4), 0)
+        self.assertEqual(img.GetPixel(11, 3, 3), 1)
+        self.assertEqual(img.GetPixel(10, 6, 3), 1)
+        self.assertEqual(img.GetPixel(7, 5, 2), 1)
+        self.assertEqual(img.GetPixel(7, 6, 2), 0)
+
+        # Sphere 2
+        self.assertEqual(img.GetPixel(4, 9, 4), 2)  # Center voxel
+        self.assertEqual(img.GetPixel(5, 8, 3), 2)
+        self.assertEqual(img.GetPixel(2, 11, 6), 0)
+        self.assertEqual(img.GetPixel(5, 8, 7), 0)
+        self.assertEqual(img.GetPixel(6, 11, 5), 2)
+
+        # Sphere 3
+        self.assertEqual(img.GetPixel(9, 14, 4), 3)  # Center voxel
+        self.assertEqual(img.GetPixel(8, 13, 3), 3)
+        self.assertEqual(img.GetPixel(10, 16, 3), 3)
+        self.assertEqual(img.GetPixel(6, 16, 5), 0)
+        self.assertEqual(img.GetPixel(10, 13, 7), 0)
+
+        # Sphere 4
+        self.assertEqual(img.GetPixel(14, 9, 4), 4)  # Center voxel
+        self.assertEqual(img.GetPixel(13, 10, 3), 4)
+        self.assertEqual(img.GetPixel(12, 11, 6), 0)
+        self.assertEqual(img.GetPixel(12, 10, 3), 4)
+        self.assertEqual(img.GetPixel(11, 9, 4), 4)
+        self.assertEqual(img.GetPixel(11, 9, 5), 0)
+
+
+    def test_four_spheres_in_row(self):
+        img = nmiq.mask.spheres_in_cylinder_3d(
+            image_size=(6, 6, 16),
+            image_spacing=(1, 1, 1),
+            image_origin=(0, 0, 0),
+            cylinder_start_z=1.0,
+            cylinder_end_z=13.0,
+            cylinder_center_x=3.0,
+            cylinder_center_y=3.0,
+            cylinder_radius=1.5,
+            roi_radius=0.9
+        )
+
+        self.assertEqual(3, img.GetDimension())
+        self.assertEqual((1, 1, 1), img.GetSpacing())
+        self.assertEqual((0, 0, 0), img.GetOrigin())
+        self.assertEqual((6, 6, 16), img.GetSize())
+
+        self.assertEqual(4, np.max(sitk.GetArrayFromImage(img)))
+
+        self.assertEqual(img.GetPixel(3, 3, 0), 0)
+        self.assertEqual(img.GetPixel(3, 3, 1), 1)
+        self.assertEqual(img.GetPixel(3, 3, 2), 1)
+        self.assertEqual(img.GetPixel(3, 3, 3), 0)
+        self.assertEqual(img.GetPixel(3, 3, 4), 2)
+        self.assertEqual(img.GetPixel(3, 3, 5), 2)
+        self.assertEqual(img.GetPixel(3, 3, 6), 0)
+        self.assertEqual(img.GetPixel(3, 3, 7), 3)
+        self.assertEqual(img.GetPixel(3, 3, 8), 3)
+        self.assertEqual(img.GetPixel(3, 3, 9), 0)
+        self.assertEqual(img.GetPixel(3, 3, 10), 4)
+        self.assertEqual(img.GetPixel(3, 3, 11), 4)
+        self.assertEqual(img.GetPixel(3, 3, 12), 0)
+        self.assertEqual(img.GetPixel(3, 3, 13), 0)
+        self.assertEqual(img.GetPixel(3, 3, 14), 0)
+        self.assertEqual(img.GetPixel(3, 3, 15), 0)
+
+
+
 

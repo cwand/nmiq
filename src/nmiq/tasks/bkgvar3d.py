@@ -1,5 +1,6 @@
 from typing import Any
 import SimpleITK as sitk
+import numpy as np
 import nmiq
 import os
 
@@ -17,11 +18,21 @@ def bkgvar3d(task_dict: dict[str, Any]):
         roi_radius=task_dict['roi_radius']
     )
 
+    max_label = np.max(sitk.GetArrayFromImage(mask))
+
+    label_stats_filter = sitk.LabelStatisticsImageFilter()
+    label_stats_filter.Execute(img, mask)
+    means = np.zeros(max_label)
+    for label in range(max_label):
+        means[label] = label_stats_filter.GetMean(label + 1)
+
+    bkg_var = np.std(means, ddof=1) / np.mean(means)
+
     mask_write_path = os.path.join(task_dict['output_path'], 'bkgvar3d_mask.nii.gz')
     sitk.WriteImage(mask, mask_write_path)
 
     res_file = os.path.join(task_dict['output_path'], 'bkgvar3d_res.txt')
     with open(res_file, 'w') as f:
-        f.write("Result:\tN/A\n")
-        f.write("S.E.:\tN/A\n")
+        f.write(f"Result:\t{bkg_var}\n")
+        f.write("S.E.:\tnan\n")
         f.write("K:\t1\n")
