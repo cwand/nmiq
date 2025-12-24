@@ -11,9 +11,9 @@ class TestSpheresInCylinder3D(unittest.TestCase):
             image_spacing = (1, 1, 1),
             image_origin = (0, 0, 0),
             cylinder_start_z = 1.0,
-            cylinder_end_z = 2.5,
-            cylinder_center_x = 1.5,
-            cylinder_center_y = 1.5,
+            cylinder_end_z = 2.49,
+            cylinder_center_x = 1.,
+            cylinder_center_y = 1.,
             cylinder_radius = 1,
             roi_radius = 0.6
         )
@@ -29,9 +29,9 @@ class TestSpheresInCylinder3D(unittest.TestCase):
             image_spacing = (1, 1, 1),
             image_origin = (1, 1, 1),
             cylinder_start_z = 2.0,
-            cylinder_end_z = 3.5,
-            cylinder_center_x = 2.5,
-            cylinder_center_y = 2.5,
+            cylinder_end_z = 3.49,
+            cylinder_center_x = 2.,
+            cylinder_center_y = 2.,
             cylinder_radius = 1.0,
             roi_radius = 0.6
         )
@@ -47,9 +47,9 @@ class TestSpheresInCylinder3D(unittest.TestCase):
             image_spacing = (2, 2, 2),
             image_origin = (0, 0, 0),
             cylinder_start_z = 2.0,
-            cylinder_end_z = 5.0,
-            cylinder_center_x = 3.0,
-            cylinder_center_y = 3.0,
+            cylinder_end_z = 4.99,
+            cylinder_center_x = 2.99,
+            cylinder_center_y = 2.99,
             cylinder_radius = 2.0,
             roi_radius = 1.2
         )
@@ -101,7 +101,7 @@ class TestSpheresInCylinder3D(unittest.TestCase):
                           1.0, # Roi radius
                           )
 
-    def test_cylinder_fits_image_x_left(self):
+    def test_cylinder_fits_image_x_right(self):
         self.assertRaises(ValueError,
                           nmiq.mask.spheres_in_cylinder_3d,
                           (100, 100, 100),
@@ -109,11 +109,69 @@ class TestSpheresInCylinder3D(unittest.TestCase):
                           (0, 0, 0),
                           20,  # Start z
                           80,  # End z
-                          9.4,  # Center x
-                          100,  # Center y
+                          89.6,  # Center x
+                          50,  # Center y
                           10.0,  # Cyl radius
                           1.0,  # Roi radius
                           )
+
+    def test_cylinder_fits_image_y_top(self):
+        self.assertRaises(ValueError,
+                          nmiq.mask.spheres_in_cylinder_3d,
+                          (100, 100, 100),
+                          (1.0, 1.0, 1.0),
+                          (0, 0, 0),
+                          20,  # Start z
+                          80,  # End z
+                          50,  # Center x
+                          9.4,  # Center y
+                          10.0,  # Cyl radius
+                          1.0,  # Roi radius
+                          )
+
+    def test_cylinder_fits_image_y_bottom(self):
+        self.assertRaises(ValueError,
+                          nmiq.mask.spheres_in_cylinder_3d,
+                          (100, 100, 100),
+                          (1.0, 1.0, 1.0),
+                          (0, 0, 0),
+                          20,  # Start z
+                          80,  # End z
+                          50,  # Center x
+                          89.6,  # Center y
+                          10.0,  # Cyl radius
+                          1.0,  # Roi radius
+                          )
+
+    def test_cylinder_fits_image_z_start(self):
+        self.assertRaises(ValueError,
+                          nmiq.mask.spheres_in_cylinder_3d,
+                          (100, 100, 100),
+                          (1.0, 1.0, 1.0),
+                          (0, 0, 40),
+                          39,  # Start z
+                          100,  # End z
+                          50,  # Center x
+                          50,  # Center y
+                          10.0,  # Cyl radius
+                          1.0,  # Roi radius
+                          )
+
+    def test_cylinder_fits_image_z_end(self):
+        self.assertRaises(ValueError,
+                          nmiq.mask.spheres_in_cylinder_3d,
+                          (100, 100, 100),
+                          (1.0, 1.0, 1.0),
+                          (0, 0, 40),
+                          50,  # Start z
+                          139.6,  # End z
+                          50,  # Center x
+                          50,  # Center y
+                          10.0,  # Cyl radius
+                          1.0,  # Roi radius
+                          )
+
+
 
 
     def test_single_sphere(self):
