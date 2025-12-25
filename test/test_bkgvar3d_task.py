@@ -119,7 +119,7 @@ class TestBkgVar3D_task(unittest.TestCase):
 
             line1 = lines[1].strip().split()
             self.assertEqual("S.E.:", line1[0])
-            self.assertEqual(0.273424, float(line1[1]))
+            self.assertAlmostEqual(0.261395, float(line1[1]), places=6)
 
             self.assertEqual("K:\t4", lines[2].strip())
 

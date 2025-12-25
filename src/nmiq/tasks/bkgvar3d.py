@@ -26,13 +26,14 @@ def bkgvar3d(task_dict: dict[str, Any]):
     for label in range(max_label):
         means[label] = label_stats_filter.GetMean(label + 1)
 
-    bkg_var = np.std(means, ddof=1) / np.mean(means)
+    bkg_var_func = lambda x: np.std(x, ddof=1) / np.mean(x)
+    bkg_var, se = nmiq.jackknife(bkg_var_func, means)
 
     mask_write_path = os.path.join(task_dict['output_path'], 'bkgvar3d_mask.nii.gz')
     sitk.WriteImage(mask, mask_write_path)
 
     res_file = os.path.join(task_dict['output_path'], 'bkgvar3d_res.txt')
     with open(res_file, 'w') as f:
-        f.write(f"Result:\t{bkg_var}\n")
-        f.write("S.E.:\tnan\n")
-        f.write("K:\t1\n")
+        f.write(f"Result:\t{float(bkg_var)}\n")
+        f.write(f"S.E.:\t{float(se)}\n")
+        f.write(f"K:\t{int(max_label)}\n")
