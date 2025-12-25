@@ -1,6 +1,19 @@
 import unittest
 import nmiq.core
 import os
+import numpy as np
+
+
+class TestJackknife(unittest.TestCase):
+
+    def test_bkg_var(self):
+        data = np.array([1.0, 2.0, 3.0])
+        f = lambda x: np.std(x, ddof=1)/np.mean(x)
+        m, se = nmiq.jackknife(f, data)
+        self.assertEqual(0.5, m)
+        self.assertAlmostEqual(0.245452, se, places=6)
+
+
 
 
 class TestLoadImages(unittest.TestCase):

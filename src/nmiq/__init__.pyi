@@ -1,6 +1,12 @@
 import SimpleITK as sitk
+import numpy as np
+import numpy.typing as npt
+from collections.abc import Callable
 
 def load_images(image_path: str) -> sitk.Image: ...
+
+def jackknife(func: Callable[[npt.NDArray[np.float64]], float],
+              data: npt.NDArray[np.float64]) -> tuple[float, float]: ...
 
 def spheres_in_cylinder_3d(
         image_size: tuple[int, int, int],
