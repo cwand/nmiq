@@ -302,6 +302,27 @@ class TestSpheresInCylinder3D(unittest.TestCase):
         self.assertEqual(img.GetPixel(3, 3, 14), 0)
         self.assertEqual(img.GetPixel(3, 3, 15), 0)
 
+    def test_concentric_cylinders(self):
+        img = nmiq.mask.spheres_in_cylinder_3d(
+            image_size=(17, 17, 17),
+            image_spacing=(1, 1, 1),
+            image_origin=(0, 0, 0),
+            cylinder_start_z=1.0,
+            cylinder_end_z=7.0,
+            cylinder_center_x=8.0,
+            cylinder_center_y=8.0,
+            cylinder_radius=7.0,
+            roi_radius=1.0
+        )
+
+        self.assertEqual(3, img.GetDimension())
+        self.assertEqual((1, 1, 1), img.GetSpacing())
+        self.assertEqual((0, 0, 0), img.GetOrigin())
+        self.assertEqual((17, 17, 17), img.GetSize())
+
+        self.assertEqual(56, np.max(sitk.GetArrayFromImage(img)))
+
+
 
 
 

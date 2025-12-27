@@ -58,44 +58,48 @@ def spheres_in_cylinder_3d(
     # Sanity checks OK - start masking
 
     roi_center_z = cylinder_start_z + roi_radius
-    z_idx = 0
+    label = 1
     while roi_center_z + roi_radius < cylinder_end_z:
-        if roi_radius > cylinder_radius / 2.0:
-            # Only room for one sphere. Place it in the center of the cylinder
-            placement_radius = 0.0
-            n = 1
-        else:
-            # Spheres will be by the perimeter of the cylinder (kissing the edge)
-            placement_radius = cylinder_radius - roi_radius
-            # Calculate number of spheres:
-            n = np.floor( np.pi / np.arcsin(roi_radius / (cylinder_radius - roi_radius)) )
-        for s in range(int(n)):
-            # Determine center point of ROI.
-            roi_center_x = cylinder_center_x - placement_radius * np.sin(2 * s * np.pi / n)
-            roi_center_y = cylinder_center_y - placement_radius * np.cos(2 * s * np.pi / n)
-            # Find a bounding box around center voxel, that will contain all relevant voxels
-            lower_index = img.TransformPhysicalPointToIndex(
-                (roi_center_x - roi_radius,
-                 roi_center_y - roi_radius,
-                 roi_center_z - roi_radius))
-            upper_index = img.TransformPhysicalPointToIndex(
-                (roi_center_x + roi_radius,
-                 roi_center_y + roi_radius,
-                 roi_center_z + roi_radius)
-            )
-            # Iterate through bounding box
-            for ix in range(lower_index[0], upper_index[0] + 1):
-                for iy in range(lower_index[1], upper_index[1] + 1):
-                    for iz in range(lower_index[2], upper_index[2] + 1):
-                        voxel_center_point = img.TransformIndexToPhysicalPoint((ix, iy, iz))
-                        d2 = ((voxel_center_point[0] - roi_center_x) ** 2 +
-                              (voxel_center_point[1] - roi_center_y) ** 2 +
-                              (voxel_center_point[2] - roi_center_z) ** 2)
-                        if d2 <= roi_radius ** 2:
-                            img.SetPixel(ix, iy, iz, int(n) * z_idx + s + 1)
+        conc_cylinder_radius = cylinder_radius
+        while conc_cylinder_radius >= roi_radius:
+            if roi_radius > conc_cylinder_radius / 2.0:
+                # Only room for one sphere. Place it in the center of the cylinder
+                placement_radius = 0.0
+                n = 1
+            else:
+                # Spheres will be by the perimeter of the cylinder (kissing the edge)
+                placement_radius = conc_cylinder_radius - roi_radius
+                # Calculate number of spheres:
+                n = np.floor( np.pi / np.arcsin(roi_radius / (conc_cylinder_radius - roi_radius)) )
+            for s in range(int(n)):
+                # Determine center point of ROI.
+                roi_center_x = cylinder_center_x - placement_radius * np.sin(2 * s * np.pi / n)
+                roi_center_y = cylinder_center_y - placement_radius * np.cos(2 * s * np.pi / n)
+                # Find a bounding box around center voxel, that will contain all relevant voxels
+                lower_index = img.TransformPhysicalPointToIndex(
+                    (roi_center_x - roi_radius,
+                     roi_center_y - roi_radius,
+                     roi_center_z - roi_radius))
+                upper_index = img.TransformPhysicalPointToIndex(
+                    (roi_center_x + roi_radius,
+                     roi_center_y + roi_radius,
+                     roi_center_z + roi_radius)
+                )
+                # Iterate through bounding box
+                for ix in range(lower_index[0], upper_index[0] + 1):
+                    for iy in range(lower_index[1], upper_index[1] + 1):
+                        for iz in range(lower_index[2], upper_index[2] + 1):
+                            voxel_center_point = img.TransformIndexToPhysicalPoint((ix, iy, iz))
+                            d2 = ((voxel_center_point[0] - roi_center_x) ** 2 +
+                                  (voxel_center_point[1] - roi_center_y) ** 2 +
+                                  (voxel_center_point[2] - roi_center_z) ** 2)
+                            if d2 <= roi_radius ** 2:
+                                img.SetPixel(ix, iy, iz, label)
+                label = label + 1
+
+            conc_cylinder_radius = conc_cylinder_radius - 2 * roi_radius - max(img.GetSpacing()[0], img.GetSpacing()[1])
 
         roi_center_z = roi_center_z + 2 * roi_radius + img.GetSpacing()[2]
-        z_idx = z_idx + 1
 
 
 
