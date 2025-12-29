@@ -1,5 +1,6 @@
 from typing import Any
 
+
 def summary(task_dict: dict[str, Any]):
     print("Image summary:")
     image = task_dict["image"]

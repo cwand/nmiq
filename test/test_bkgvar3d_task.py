@@ -73,7 +73,6 @@ class TestBkgVar3D_task(unittest.TestCase):
             self.assertEqual("S.E.:\tnan", lines[1].strip())
             self.assertEqual("K:\t1", lines[2].strip())
 
-
     def test_bkg_var_result(self):
 
         img = sitk.Image((6, 6, 16), sitk.sitkFloat32)
@@ -122,10 +121,6 @@ class TestBkgVar3D_task(unittest.TestCase):
             self.assertAlmostEqual(0.261395, float(line1[1]), places=6)
 
             self.assertEqual("K:\t4", lines[2].strip())
-
-
-
-
 
     def tearDown(self):
         if os.path.exists(os.path.join('test', 'bkgvar3d_mask.nii.gz')):

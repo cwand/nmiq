@@ -1,9 +1,30 @@
 import os.path
-
+from math import ceil
 import SimpleITK as sitk
 import numpy as np
 import numpy.typing as npt
 from collections.abc import Callable
+
+
+def resample_image(image: sitk.Image,
+                   new_spacing: tuple[float, ...]) -> sitk.Image:
+    original_size = image.GetSize()
+    original_spacing = image.GetSpacing()
+    new_size = [
+        int(ceil(original_size[i] * original_spacing[i] / new_spacing[i]))
+        for i in range(image.GetDimension())
+    ]
+
+    resampler = sitk.ResampleImageFilter()
+    resampler.SetInterpolator(
+        sitk.sitkNearestNeighbor)
+    resampler.SetOutputSpacing(new_spacing)
+    resampler.SetSize(new_size)
+    resampler.SetOutputDirection(image.GetDirection())
+    resampler.SetOutputOrigin(image.GetOrigin())
+
+    return resampler.Execute(image)  # type: ignore
+
 
 def load_images(image_path: str) -> sitk.Image:
 
@@ -13,7 +34,9 @@ def load_images(image_path: str) -> sitk.Image:
     series_reader = sitk.ImageSeriesReader()
     dcm_names = series_reader.GetGDCMSeriesFileNames(image_path)
     series_reader.SetFileNames(dcm_names)
-    return series_reader.Execute()
+
+    return series_reader.Execute()  # type: ignore
+
 
 def jackknife(func: Callable[[npt.NDArray[np.float64]], float],
               data: npt.NDArray[np.float64]) -> tuple[float, float]:

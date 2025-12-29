@@ -3,7 +3,12 @@ import numpy as np
 import numpy.typing as npt
 from collections.abc import Callable
 
+from nmiq import tasks
+
 def load_images(image_path: str) -> sitk.Image: ...
+
+def resample_image(image: sitk.Image,
+                   new_spacing: tuple[float, ...]) -> sitk.Image: ...
 
 def jackknife(func: Callable[[npt.NDArray[np.float64]], float],
               data: npt.NDArray[np.float64]) -> tuple[float, float]: ...

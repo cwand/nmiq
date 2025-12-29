@@ -1,8 +1,14 @@
 from typing import Any
 import SimpleITK as sitk
 import numpy as np
+import numpy.typing as npt
 import nmiq
 import os
+
+
+def _bkg_var_func(x: npt.NDArray[np.float64]) -> float:
+    return float(np.std(x, ddof=1) / np.mean(x))
+
 
 def bkgvar3d(task_dict: dict[str, Any]):
     img = task_dict['image']
@@ -26,10 +32,10 @@ def bkgvar3d(task_dict: dict[str, Any]):
     for label in range(max_label):
         means[label] = label_stats_filter.GetMean(label + 1)
 
-    bkg_var_func = lambda x: np.std(x, ddof=1) / np.mean(x)
-    bkg_var, se = nmiq.jackknife(bkg_var_func, means)
+    bkg_var, se = nmiq.jackknife(_bkg_var_func, means)
 
-    mask_write_path = os.path.join(task_dict['output_path'], 'bkgvar3d_mask.nii.gz')
+    mask_write_path = os.path.join(task_dict['output_path'],
+                                   'bkgvar3d_mask.nii.gz')
     sitk.WriteImage(mask, mask_write_path)
 
     res_file = os.path.join(task_dict['output_path'], 'bkgvar3d_res.txt')

@@ -1,13 +1,16 @@
 import unittest
 from nmiq import __main__
 import os
+import SimpleITK as sitk
 
 
 class TestBkgVar3D_main(unittest.TestCase):
 
     def test_bkg_var_files(self):
 
-        img_path = os.path.join('test', 'data', '300', 'Patient_unif290725_Study_1_Scan_5_Bed_1_Dyn_1.dcm')
+        img_path = os.path.join(
+            'test', 'data', '300',
+            'Patient_unif290725_Study_1_Scan_5_Bed_1_Dyn_1.dcm')
         out_path = os.path.join('test')
 
         __main__.main(['bkgvar3d', '-i', img_path, '-o', out_path,
@@ -15,8 +18,43 @@ class TestBkgVar3D_main(unittest.TestCase):
                        '--center_x', '0', '--center_y', '0',
                        '--cyl_radius', '30', '--roi_radius', '20',])
 
-        self.assertTrue(os.path.isfile(os.path.join(out_path, 'bkgvar3d_mask.nii.gz')))
-        self.assertTrue(os.path.isfile(os.path.join(out_path, 'bkgvar3d_res.txt')))
+        self.assertTrue(os.path.isfile(os.path.join(out_path,
+                                                    'bkgvar3d_mask.nii.gz')))
+        self.assertTrue(os.path.isfile(os.path.join(out_path,
+                                                    'bkgvar3d_res.txt')))
+
+    def test_resample(self):
+
+        img_path = os.path.join(
+            'test', 'data', '300',
+            'Patient_unif290725_Study_1_Scan_5_Bed_1_Dyn_1.dcm')
+        out_path = os.path.join('test')
+
+        __main__.main(['bkgvar3d', '-i', img_path, '-o', out_path,
+                       '--resample', '1,1,0',
+                       '--start_z', '1100', '--end_z', '1150',
+                       '--center_x', '0', '--center_y', '0',
+                       '--cyl_radius', '30', '--roi_radius', '20'])
+
+        img = sitk.ReadImage(os.path.join(out_path, 'bkgvar3d_mask.nii.gz'))
+        self.assertEqual(1.0, img.GetSpacing()[0])
+        self.assertEqual(1.0, img.GetSpacing()[1])
+        self.assertAlmostEqual(4.92, img.GetSpacing()[2], places=6)
+
+    def test_resample_correct_dimension(self):
+
+        img_path = os.path.join(
+            'test', 'data', '300',
+            'Patient_unif290725_Study_1_Scan_5_Bed_1_Dyn_1.dcm')
+        out_path = os.path.join('test')
+
+        self.assertRaises(ValueError,
+                          __main__.main,
+                          ['bkgvar3d', '-i', img_path, '-o', out_path,
+                           '--resample', '1,1,1,0',
+                           '--start_z', '1100', '--end_z', '1150',
+                           '--center_x', '0', '--center_y', '0',
+                           '--cyl_radius', '30', '--roi_radius', '20'])
 
     def tearDown(self):
         if os.path.exists(os.path.join('test', 'bkgvar3d_mask.nii.gz')):

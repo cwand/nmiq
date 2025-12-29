@@ -3,8 +3,7 @@ import nmiq
 import sys
 import importlib.metadata
 import time
-
-from nmiq.tasks import bkgvar3d
+from typing import Any
 
 
 def main(sys_args: list[str]):
@@ -26,6 +25,13 @@ def main(sys_args: list[str]):
                         help='Path to image files')
     parser.add_argument('-o',
                         help='Output path')
+    parser.add_argument('--resample',
+                        help='Resample the input image with a given spacing '
+                             'in each image dimension. '
+                             'The new spacings should be given as a '
+                             'comma-separated list, like "1.2,1.2,0", '
+                             'where a 0 means the original spacing should '
+                             'be kept for that dimension.')
     parser.add_argument('--start_z',
                         help='Start z-coordinate [usage: bkgvar3d]')
     parser.add_argument('--end_z',
@@ -41,14 +47,32 @@ def main(sys_args: list[str]):
 
     args = parser.parse_args(sys_args)
 
-    task_dict = {}
+    task_dict: dict[str, Any] = {}
 
     # Load images
     print("Loading images...")
     img = nmiq.load_images(args.i)
     task_dict['image'] = img
-    print(f"... done!")
+    print("... done!")
     print()
+
+    # Resample input image if needed
+    if args.resample:
+
+        old_spacing = img.GetSpacing()
+        new_spacing: list[float] = []
+        spacings = args.resample.split(',')
+        if len(old_spacing) != len(spacings):
+            raise ValueError(f"Dimension mismatch when resampling. "
+                             f"Original image spacing: {old_spacing}. "
+                             f"Spacing requested: {args.resample}.")
+        for i in range(len(old_spacing)):
+            if spacings[i] == '0':
+                new_spacing.append(old_spacing[i])
+            else:
+                new_spacing.append(float(spacings[i]))
+        img2 = nmiq.resample_image(img, tuple(new_spacing))
+        task_dict['image'] = img2
 
     if args.task == 'summary':
         nmiq.tasks.summary(task_dict)
