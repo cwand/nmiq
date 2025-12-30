@@ -23,3 +23,6 @@ def spheres_in_cylinder_3d(
         cylinder_center_y: float,
         cylinder_radius: float,
         roi_radius: float) -> sitk.Image: ...
+
+def nema_fwhm_from_line_profile(
+        line_profile: npt.NDArray[np.float64]) -> float: ...

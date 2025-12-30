@@ -14,8 +14,8 @@ class TestBkgVar3D_task(unittest.TestCase):
 
         task_dict = {
             'image': img,
-            'cylinder_start_z': 1.0,
-            'cylinder_end_z': 5.5,
+            'start_z': 1.0,
+            'end_z': 5.5,
             'cylinder_center_x': 5.0,
             'cylinder_center_y': 5.0,
             'cylinder_radius': 3.0,
@@ -55,8 +55,8 @@ class TestBkgVar3D_task(unittest.TestCase):
 
         task_dict = {
             'image': img,
-            'cylinder_start_z': 1.0,
-            'cylinder_end_z': 5.5,
+            'start_z': 1.0,
+            'end_z': 5.5,
             'cylinder_center_x': 5.0,
             'cylinder_center_y': 5.0,
             'cylinder_radius': 3.0,
@@ -98,8 +98,8 @@ class TestBkgVar3D_task(unittest.TestCase):
 
         task_dict = {
             'image': img,
-            'cylinder_start_z': 1.0,
-            'cylinder_end_z': 13.0,
+            'start_z': 1.0,
+            'end_z': 13.0,
             'cylinder_center_x': 3.0,
             'cylinder_center_y': 3.0,
             'cylinder_radius': 1.5,

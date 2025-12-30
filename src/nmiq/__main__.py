@@ -78,8 +78,8 @@ def main(sys_args: list[str]):
         nmiq.tasks.summary(task_dict)
         print()
     if args.task == 'bkgvar3d':
-        task_dict['cylinder_start_z'] = float(args.start_z)
-        task_dict['cylinder_end_z'] = float(args.end_z)
+        task_dict['start_z'] = float(args.start_z)
+        task_dict['end_z'] = float(args.end_z)
         task_dict['cylinder_center_x'] = float(args.center_x)
         task_dict['cylinder_center_y'] = float(args.center_y)
         task_dict['cylinder_radius'] = float(args.cyl_radius)
