@@ -29,14 +29,14 @@ def nema_fwhm_from_line_profile(
         i += 1
     # At this point: y[i] < yhm < y[i+1]
     # Find left value by interpolation:
-    xl = (yhm - y[i+1] + (y[i+1] - y[i]) * (i + 1)) / (y[i+1] - y[i])
+    xl = i + (yhm - y[i])/(y[i+1] - y[i])
 
     i = i + 1
     while y[i+1] > yhm:
         i += 1
     # At this point: y[i] > yhm > y[i+1]
     # Find right value by interpolation:
-    xr = (yhm - y[i + 1] + (y[i + 1] - y[i]) * (i + 1)) / (y[i + 1] - y[i])
+    xr = i + (yhm - y[i])/(y[i+1] - y[i])
 
     return xr - xl
 

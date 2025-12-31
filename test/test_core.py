@@ -31,6 +31,39 @@ class TestResampleImage(unittest.TestCase):
             img2.GetPixel(340, 333, 140), 55230.714, places=3)
 
 
+class TestExtractBox(unittest.TestCase):
+
+    def test_extract_box_3d_to_3d(self):
+        img = sitk.Image((10, 10, 10), sitk.sitkFloat32)
+        img.SetSpacing((1, 1, 1))
+        img.SetOrigin((0, 0, 0))
+        for x in range(10):
+            for y in range(10):
+                for z in range(10):
+                    value = x + y * 10 + z * 100
+                    img.SetPixel(x, y, z, value)
+        data = nmiq.extract_box(img,
+                                min_x=1, max_x=3,
+                                min_y=7, max_y=8,
+                                min_z=2, max_z=3)
+        self.assertEqual(data.shape, (3, 2, 2))
+        self.assertEqual(data[0, 0, 0], 271)
+        self.assertEqual(data[1, 0, 0], 272)
+        self.assertEqual(data[2, 0, 0], 273)
+
+        self.assertEqual(data[0, 1, 0], 281)
+        self.assertEqual(data[1, 1, 0], 282)
+        self.assertEqual(data[2, 1, 0], 283)
+
+        self.assertEqual(data[0, 0, 1], 371)
+        self.assertEqual(data[1, 0, 1], 372)
+        self.assertEqual(data[2, 0, 1], 373)
+
+        self.assertEqual(data[0, 1, 1], 381)
+        self.assertEqual(data[1, 1, 1], 382)
+        self.assertEqual(data[2, 1, 1], 383)
+
+
 class TestJackknife(unittest.TestCase):
 
     def test_bkg_var(self):
