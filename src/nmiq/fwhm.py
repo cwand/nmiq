@@ -1,6 +1,7 @@
 import numpy as np
 import numpy.typing as npt
 
+
 def nema_fwhm_from_line_profile(
         y: npt.NDArray[np.float64]) -> float:
 
@@ -17,8 +18,12 @@ def nema_fwhm_from_line_profile(
 
     d = (x1 - x2) * (x1 - x3) * (x2 - x3)
     a = (x3 * (y2 - y1) + x2 * (y1 - y3) + x1 * (y3 - y2)) / d
-    b = ((x1 * x1) * (y2 - y3) + (x3 * x3) * (y1 - y2) + (x2 * x2) * (y3 - y1)) / d
-    c = ((x2 * x2) * (x3 * y1 - x1 * y3) + x2 * (x1 * x1 * y3 - x3 * x3 * y1) + x1 * x3 * (x3 - x1) * y2) / d
+    b = ((x1 * x1) * (y2 - y3) +
+         (x3 * x3) * (y1 - y2) +
+         (x2 * x2) * (y3 - y1)) / d
+    c = ((x2 * x2) * (x3 * y1 - x1 * y3) +
+         x2 * (x1 * x1 * y3 - x3 * x3 * y1) +
+         x1 * x3 * (x3 - x1) * y2) / d
 
     # Calculate half max value
     yhm = (4 * a * c - b * b) / (8 * a)
@@ -38,6 +43,4 @@ def nema_fwhm_from_line_profile(
     # Find right value by interpolation:
     xr = i + (yhm - y[i])/(y[i+1] - y[i])
 
-    return xr - xl
-
-
+    return float(xr - xl)

@@ -20,7 +20,7 @@ class TestLSF_task(unittest.TestCase):
             'center_x': [20, 60],
             'center_y': [50, 30],
             'radius': [5, 5],
-            'direction': [1, 2],
+            'direction': ['x', 'y'],
             'output_path': os.path.join('test')
         }
 
@@ -84,6 +84,68 @@ class TestLSF_task(unittest.TestCase):
             line1 = lines[1].strip().split()
             self.assertEqual("S.E.:", line1[0])
             self.assertAlmostEqual(0.67246, float(line1[1]), places=5)
+
+    def test_fwhm_errors_unequal_group_lengths(self):
+
+        img = sitk.Image((100, 100, 100), sitk.sitkFloat32)
+        img.SetSpacing((1, 1, 1))
+        img.SetOrigin((0, 0, 0))
+
+        task_dict = {
+            'image': img,
+            'start_z': 1.0,
+            'end_z': 9.0,
+            'delta_z': 6.0,
+            'center_x': [20],
+            'center_y': [50, 30],
+            'radius': [5, 5],
+            'direction': ['x', 'y'],
+            'output_path': os.path.join('test')
+        }
+
+        self.assertRaises(ValueError, nmiq.tasks.lsf, task_dict)
+
+        task_dict = {
+            'image': img,
+            'start_z': 1.0,
+            'end_z': 9.0,
+            'delta_z': 6.0,
+            'center_x': [20, 60],
+            'center_y': [50],
+            'radius': [5, 5],
+            'direction': ['x', 'y'],
+            'output_path': os.path.join('test')
+        }
+
+        self.assertRaises(ValueError, nmiq.tasks.lsf, task_dict)
+
+        task_dict = {
+            'image': img,
+            'start_z': 1.0,
+            'end_z': 9.0,
+            'delta_z': 6.0,
+            'center_x': [20, 60],
+            'center_y': [50, 30],
+            'radius': [5],
+            'direction': ['x', 'y'],
+            'output_path': os.path.join('test')
+        }
+
+        self.assertRaises(ValueError, nmiq.tasks.lsf, task_dict)
+
+        task_dict = {
+            'image': img,
+            'start_z': 1.0,
+            'end_z': 9.0,
+            'delta_z': 6.0,
+            'center_x': [20, 60],
+            'center_y': [50, 30],
+            'radius': [5, 5],
+            'direction': ['x'],
+            'output_path': os.path.join('test')
+        }
+
+        self.assertRaises(ValueError, nmiq.tasks.lsf, task_dict)
 
     def tearDown(self):
         if os.path.exists(os.path.join('test', 'lsf_res.txt')):

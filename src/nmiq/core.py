@@ -25,21 +25,6 @@ def resample_image(image: sitk.Image,
 
     return resampler.Execute(image)  # type: ignore
 
-def extract_box(image: sitk.Image,
-                min_x: float, max_x: float,
-                min_y: float, max_y: float,
-                min_z: float, max_z: float) -> npt.NDArray[np.float64]:
-    image_data = sitk.GetArrayFromImage(image)
-    min_p = image.TransformPhysicalPointToIndex((min_x, min_y, min_z))
-    print(min_p)
-    max_p = image.TransformPhysicalPointToIndex((max_x, max_y, max_z))
-    print(max_p)
-    return image_data[
-        min_p[2]:max_p[2]+1,
-        min_p[1]:max_p[1]+1,
-        min_p[0]:max_p[0]+1
-    ]
-
 
 def load_images(image_path: str) -> sitk.Image:
 
