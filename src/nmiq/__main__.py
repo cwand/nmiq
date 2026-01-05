@@ -18,7 +18,7 @@ def main(sys_args: list[str]):
     parser = argparse.ArgumentParser()
 
     parser.add_argument('task',
-                        choices=['summary', 'bkgvar3d'],
+                        choices=['summary', 'bkgvar3d', 'lsf'],
                         help="The task to run")
 
     parser.add_argument('-i',
@@ -33,13 +33,20 @@ def main(sys_args: list[str]):
                              'where a 0 means the original spacing should '
                              'be kept for that dimension.')
     parser.add_argument('--start_z',
-                        help='Start z-coordinate [usage: bkgvar3d]')
+                        help='Start z-coordinate [usage: bkgvar3d, lsf]')
     parser.add_argument('--end_z',
-                        help='End z-coordinate [usage: bkgvar3d]')
-    parser.add_argument('--center_x',
-                        help='Center x-coordinate [usage: bkgvar3d]')
-    parser.add_argument('--center_y',
-                        help='Start y-coordinate [usage: bkgvar3d]')
+                        help='End z-coordinate [usage: bkgvar3d, lsf]')
+    parser.add_argument('--delta_z',
+                        help='Spacing between slices in z-direction '
+                             '[usage: lsf]')
+    parser.add_argument('--center_x', nargs='*',
+                        help='Center x-coordinate [usage: bkgvar3d, lsf]')
+    parser.add_argument('--center_y', nargs='*',
+                        help='Start y-coordinate [usage: bkgvar3d, lsf]')
+    parser.add_argument('--direction', nargs='*', choices=['x', 'y'],
+                        help='Line profile direction [usage: lsf]')
+    parser.add_argument('--radius', nargs='*',
+                        help='Line profile radius [usage: lsf]')
     parser.add_argument('--cyl_radius',
                         help='Cylinder radius [usage: bkgvar3d]')
     parser.add_argument('--roi_radius',
@@ -80,12 +87,23 @@ def main(sys_args: list[str]):
     if args.task == 'bkgvar3d':
         task_dict['start_z'] = float(args.start_z)
         task_dict['end_z'] = float(args.end_z)
-        task_dict['cylinder_center_x'] = float(args.center_x)
-        task_dict['cylinder_center_y'] = float(args.center_y)
+        task_dict['cylinder_center_x'] = float(args.center_x[0])
+        task_dict['cylinder_center_y'] = float(args.center_y[0])
         task_dict['cylinder_radius'] = float(args.cyl_radius)
         task_dict['roi_radius'] = float(args.roi_radius)
         task_dict['output_path'] = args.o
         nmiq.tasks.bkgvar3d(task_dict)
+        print()
+    if args.task == 'lsf':
+        task_dict['start_z'] = float(args.start_z)
+        task_dict['end_z'] = float(args.end_z)
+        task_dict['delta_z'] = float(args.delta_z)
+        task_dict['center_x'] = [float(x) for x in args.center_x]
+        task_dict['center_y'] = [float(x) for x in args.center_x]
+        task_dict['direction'] = args.direction
+        task_dict['radius'] = [float(x) for x in args.radius]
+        task_dict['output_path'] = args.o
+        nmiq.tasks.lsf(task_dict)
         print()
 
     # Report successful end of program

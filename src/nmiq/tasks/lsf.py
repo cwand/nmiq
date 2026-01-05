@@ -13,7 +13,7 @@ def lsf(task_dict: dict[str, Any]):
     z = task_dict['start_z']
     fwhms = []
 
-    n = len(task_dict['center_x'])  # TODO
+    n = len(task_dict['center_x'])
     if len(task_dict['center_y']) != n:
         raise ValueError(f"Unequal number of FWHM points provided: "
                          f"len(center_x) = {n}, "
@@ -51,10 +51,12 @@ def lsf(task_dict: dict[str, Any]):
 
             if direction == 'x':
                 profile = img_data[z_idx, peak_idx[1], min_idx[0]:max_idx[0]]
-                fwhms.append(nmiq.nema_fwhm_from_line_profile(profile))
+                fwhm = nmiq.nema_fwhm_from_line_profile(profile)
+                fwhms.append(float(img.GetSpacing()[0]) * fwhm)
             if direction == 'y':
                 profile = img_data[z_idx, min_idx[1]:max_idx[1], peak_idx[0]]
-                fwhms.append(nmiq.nema_fwhm_from_line_profile(profile))
+                fwhm = nmiq.nema_fwhm_from_line_profile(profile)
+                fwhms.append(float(img.GetSpacing()[1]) * fwhm)
 
         z += task_dict['delta_z']
 

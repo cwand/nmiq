@@ -61,3 +61,29 @@ class TestBkgVar3D_main(unittest.TestCase):
             os.remove(os.path.join('test', 'bkgvar3d_mask.nii.gz'))
         if os.path.exists(os.path.join('test', 'bkgvar3d_res.txt')):
             os.remove(os.path.join('test', 'bkgvar3d_res.txt'))
+
+
+class TestLSF_main(unittest.TestCase):
+
+    def test_fwhm_files(self):
+
+        img_path = os.path.join(
+            'test', 'data', 'res',
+            'Patient_test20250806_Study_1_Scan_6_Bed_1_Dyn_20.dcm')
+        out_path = os.path.join('test')
+
+        __main__.main(['lsf', '-i', img_path, '-o', out_path,
+                       '--start_z', '950', '--end_z', '1100',
+                       '--delta_z', '30',
+                       '--center_x', '10.9', '67.9',
+                       '--center_y', '88.3', '14.5',
+                       '--direction', 'x', 'y',
+                       '--radius', '25', '25'])
+
+        self.assertTrue(os.path.isfile(os.path.join(out_path,
+                                                    'lsf_res.txt')))
+
+
+    def tearDown(self):
+        if os.path.exists(os.path.join('test', 'lsf_res.txt')):
+            os.remove(os.path.join('test', 'lsf_res.txt'))
