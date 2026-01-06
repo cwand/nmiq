@@ -2,6 +2,7 @@ import SimpleITK as sitk
 import numpy as np
 import numpy.typing as npt
 from collections.abc import Callable
+from typing import Any
 
 from nmiq import tasks
 
@@ -25,4 +26,9 @@ def spheres_in_cylinder_3d(
         roi_radius: float) -> sitk.Image: ...
 
 def nema_fwhm_from_line_profile(
-        line_profile: npt.NDArray[np.float64]) -> float: ...
+        line_profile: npt.NDArray[np.float64]) \
+        -> tuple[float, dict[str, Any]]: ...
+
+def gaussfit_fwhm_from_line_profile(
+        line_profile: npt.NDArray[np.float64],
+        p0: list[float]) -> list[float]: ...

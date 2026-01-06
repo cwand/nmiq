@@ -11,7 +11,8 @@ def lsf(task_dict: dict[str, Any]):
     img_data = sitk.GetArrayFromImage(img)
 
     z = task_dict['start_z']
-    fwhms = []
+    nema_fwhms = []
+    gauss_fwhms = []
 
     n = len(task_dict['center_x'])
     if len(task_dict['center_y']) != n:
@@ -50,20 +51,32 @@ def lsf(task_dict: dict[str, Any]):
                         peak_val = img[peak_idx]
 
             if direction == 'x':
-                profile = img_data[z_idx, peak_idx[1], min_idx[0]:max_idx[0]]
-                fwhm = nmiq.nema_fwhm_from_line_profile(profile)
-                fwhms.append(float(img.GetSpacing()[0]) * fwhm)
-            if direction == 'y':
-                profile = img_data[z_idx, min_idx[1]:max_idx[1], peak_idx[0]]
-                fwhm = nmiq.nema_fwhm_from_line_profile(profile)
-                fwhms.append(float(img.GetSpacing()[1]) * fwhm)
+                profile = img_data[z_idx, peak_idx[1], min_idx[0]:max_idx[0]+1]
+                spacing = float(img.GetSpacing()[0])
+            elif direction == 'y':
+                profile = img_data[z_idx, min_idx[1]:max_idx[1]+1, peak_idx[0]]
+                spacing = float(img.GetSpacing()[1])
+            else:
+                raise ValueError(f"Unknown direction: {direction}")
+
+            nema_fwhm = nmiq.nema_fwhm_from_line_profile(profile)
+            nema_fwhms.append(spacing * nema_fwhm[0])
+            gauss_fwhm = nmiq.gaussfit_fwhm_from_line_profile(
+                profile,
+                [np.max(profile), len(profile) / 2.0, 1.0])
+            gauss_fwhms.append(spacing * gauss_fwhm[2])
 
         z += task_dict['delta_z']
 
-    fwhm = np.mean(fwhms)
-    se = np.std(fwhms, ddof=1)/np.sqrt(len(fwhms))
+    nema_fwhm_mean = np.mean(nema_fwhms)
+    nema_se = np.std(nema_fwhms, ddof=1)/np.sqrt(len(nema_fwhms))
+
+    gauss_fwhm_mean = np.mean(gauss_fwhms)
+    gauss_se = np.std(gauss_fwhms, ddof=1) / np.sqrt(len(gauss_fwhms))
 
     res_file = os.path.join(task_dict['output_path'], 'lsf_res.txt')
     with open(res_file, 'w') as f:
-        f.write(f"FWHM:\t{float(fwhm)}\n")
-        f.write(f"S.E.:\t{float(se)}\n")
+        f.write(f"NEMA:\t{float(nema_fwhm_mean)}\n")
+        f.write(f"S.E.:\t{float(nema_se)}\n")
+        f.write(f"Gauss:\t{float(gauss_fwhm_mean)}\n")
+        f.write(f"S.E.:\t{float(gauss_se)}\n")
