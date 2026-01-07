@@ -7,10 +7,39 @@ import os
 
 
 def _bkg_var_func(x: npt.NDArray[np.float64]) -> float:
+    """
+    Function that calculates background variability from a set of measured
+    ROI values.
+    The background varaibility is defined as the sample standard deviation
+    divided by the mean of the samples.
+    """
     return float(np.std(x, ddof=1) / np.mean(x))
 
 
 def bkgvar3d(task_dict: dict[str, Any]):
+    """
+    Background variability task.
+    Calculates background variability in a cylindrical region of an image.
+    The function takes a dictionary object as input, and the following keys
+    must be present:
+        image               --  The image to analyse (SimpleITK Image)
+        start_z             --  The physical z-position of the start of the
+                                cylinder
+        end_z               --  The physical z-position of the end of the
+                                cylinder
+        cylinder_center_x   --  The x-position of the cylinder center
+        cylinder_center_y   --  The y-position of the cylinder center
+        cylinder_radius     --  The radius of the cylinder
+        roi_radius          --  The radius of the ROIs to use
+        output_path         --  The path where output should be stored
+
+    Given these inputs, a number of spherical ROIs with the given radius will
+    be placed inside the cylinder, and the background variability measured
+    from the mean values inside each ROI.
+    Two files will be created as output: A text file containing the numerical
+    results of the computation and an image file containing the spherical ROIs.
+    """
+
     img = task_dict['image']
     mask = nmiq.spheres_in_cylinder_3d(
         image_size=img.GetSize(),
