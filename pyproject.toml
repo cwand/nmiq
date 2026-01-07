@@ -33,7 +33,8 @@ classifiers = [
 dependencies = [
 	'numpy',
 	'SimpleITK',
-	'scipy'
+	'scipy',
+	'matplotlib'
 ]
 
 [project.urls]

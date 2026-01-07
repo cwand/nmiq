@@ -3,6 +3,7 @@ import SimpleITK as sitk
 import nmiq
 import os
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 def lsf(task_dict: dict[str, Any]):
@@ -10,7 +11,6 @@ def lsf(task_dict: dict[str, Any]):
     img = task_dict['image']
     img_data = sitk.GetArrayFromImage(img)
 
-    z = task_dict['start_z']
     nema_fwhms = []
     gauss_fwhms = []
 
@@ -28,7 +28,15 @@ def lsf(task_dict: dict[str, Any]):
                          f"len(center_x) = {n}, "
                          f"len(direction) = {len(task_dict['direction'])}")
 
-    while z < task_dict['end_z']:
+    zs = int(np.ceil((task_dict['end_z'] - task_dict['start_z'])
+                      / task_dict['delta_z']))
+
+    fig, axs = plt.subplots(zs, n, figsize=(n*4, zs*3))
+
+    for iz in range(zs):
+
+        z = task_dict['start_z'] + iz * task_dict['delta_z']
+
 
         for i in range(n):
             center_x = task_dict['center_x'][i]
@@ -52,9 +60,11 @@ def lsf(task_dict: dict[str, Any]):
 
             if direction == 'x':
                 profile = img_data[z_idx, peak_idx[1], min_idx[0]:max_idx[0]+1]
+                x_data = np.arange(min_idx[0], max_idx[0] + 1)
                 spacing = float(img.GetSpacing()[0])
             elif direction == 'y':
                 profile = img_data[z_idx, min_idx[1]:max_idx[1]+1, peak_idx[0]]
+                x_data = np.arange(min_idx[1], max_idx[1] + 1)
                 spacing = float(img.GetSpacing()[1])
             else:
                 raise ValueError(f"Unknown direction: {direction}")
@@ -66,7 +76,52 @@ def lsf(task_dict: dict[str, Any]):
                 [np.max(profile), len(profile) / 2.0, 1.0])
             gauss_fwhms.append(spacing * gauss_fwhm[2])
 
-        z += task_dict['delta_z']
+            x_plot_gauss = np.linspace(np.min(x_data), np.max(x_data), 1000)
+            axs[iz, i].plot(x_data, profile, 'k.', markersize=15, label='Profile')
+            axs[iz, i].plot(x_plot_gauss,
+                            gauss_fwhm[0] * np.exp(
+                                -4 * np.log(2.0) *
+                                (x_plot_gauss - x_data[0] - gauss_fwhm[1])**2 /
+                                (gauss_fwhm[2] ** 2)),
+                            '-', linewidth=2, color='darkorange', label='Gauss fit')
+            axs[iz, i].plot([x_data[0] + gauss_fwhm[1] - 0.5 * gauss_fwhm[2],
+                             x_data[0] + gauss_fwhm[1] + 0.5 * gauss_fwhm[2]],
+                            [0.5 * gauss_fwhm[0], 0.5 * gauss_fwhm[0]],
+                            '--', color='darkorange', linewidth=2)
+            x_plot_nema = np.linspace(
+                nema_fwhm[1]['x1'], nema_fwhm[1]['x1'] + 2, 1000)
+            axs[iz, i].plot(x_plot_nema + x_data[0],
+                            nema_fwhm[1]['poly'](x_plot_nema),
+                            '-', color='royalblue', linewidth=2,
+                            label='Nema fit')
+            axs[iz, i].plot(
+                [nema_fwhm[1]['left'] + x_data[0],
+                 nema_fwhm[1]['left'] + x_data[0] + 1],
+                [profile[nema_fwhm[1]['left']],
+                 profile[nema_fwhm[1]['left'] + 1]],
+                '--', color='royalblue', linewidth=1)
+            axs[iz, i].plot(
+                [nema_fwhm[1]['right'] + x_data[0],
+                 nema_fwhm[1]['right'] + x_data[0] + 1],
+                [profile[nema_fwhm[1]['right']],
+                 profile[nema_fwhm[1]['right'] + 1]],
+                '--', color='royalblue', linewidth=1)
+            axs[iz, i].plot(
+                [nema_fwhm[1]['left_int'] + x_data[0],
+                 nema_fwhm[1]['right_int'] + x_data[0]],
+                [nema_fwhm[1]['hm'], nema_fwhm[1]['hm']],
+                '--', color='royalblue', linewidth=2)
+            axs[iz, i].set_title(f'x = {center_x}, '
+                                 f'y = {center_y}, '
+                                 f'z = {z}')
+            axs[iz, i].grid()
+
+    axs[0, 0].legend()
+    fig.supxlabel('Voxel index')
+    fig.supylabel('Voxel intensity')
+    plt.tight_layout()
+    plt.savefig(os.path.join(task_dict['output_path'], 'fwhm.png'))
+
 
     nema_fwhm_mean = np.mean(nema_fwhms)
     nema_se = np.std(nema_fwhms, ddof=1)/np.sqrt(len(nema_fwhms))

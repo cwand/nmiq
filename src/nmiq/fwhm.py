@@ -32,9 +32,11 @@ def nema_fwhm_from_line_profile(
          x1 * x3 * (x3 - x1) * y2) / d
 
     img_dict['poly'] = lambda x: a * x**2 + b * x + c
+    img_dict['x1'] = x1
 
     # Calculate half max value
     yhm = (4 * a * c - b * b) / (8 * a)
+    img_dict['hm'] = yhm
 
     # Search for half max values
     i = 0
@@ -44,6 +46,7 @@ def nema_fwhm_from_line_profile(
     # Find left value by interpolation:
     xl = i + (yhm - y[i])/(y[i+1] - y[i])
     img_dict['left'] = i
+    img_dict['left_int'] = xl
 
     i = i + 1
     while y[i+1] > yhm:
@@ -52,6 +55,7 @@ def nema_fwhm_from_line_profile(
     # Find right value by interpolation:
     xr = i + (yhm - y[i])/(y[i+1] - y[i])
     img_dict['right'] = i
+    img_dict['right_int'] = xr
 
     return float(xr - xl), img_dict
 

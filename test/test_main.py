@@ -82,8 +82,12 @@ class TestLSF_main(unittest.TestCase):
 
         self.assertTrue(os.path.isfile(os.path.join(out_path,
                                                     'lsf_res.txt')))
+        self.assertTrue(os.path.isfile(os.path.join(out_path,
+                                                    'fwhm.png')))
 
 
     def tearDown(self):
         if os.path.exists(os.path.join('test', 'lsf_res.txt')):
             os.remove(os.path.join('test', 'lsf_res.txt'))
+        if os.path.exists(os.path.join('test', 'fwhm.png')):
+            os.remove(os.path.join('test', 'fwhm.png'))

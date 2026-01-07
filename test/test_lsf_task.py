@@ -248,10 +248,7 @@ class TestLSF_task(unittest.TestCase):
 
         nmiq.tasks.lsf(task_dict)
 
-        self.assertTrue(os.path.isfile(os.path.join('test', 'lsf_img0.png')))
-        self.assertTrue(os.path.isfile(os.path.join('test', 'lsf_img1.png')))
-        self.assertTrue(os.path.isfile(os.path.join('test', 'lsf_img2.png')))
-        self.assertTrue(os.path.isfile(os.path.join('test', 'lsf_img3.png')))
+        self.assertTrue(os.path.isfile(os.path.join('test', 'fwhm.png')))
 
 
     def test_fwhm_errors_unequal_group_lengths(self):
@@ -338,3 +335,5 @@ class TestLSF_task(unittest.TestCase):
     def tearDown(self):
         if os.path.exists(os.path.join('test', 'lsf_res.txt')):
             os.remove(os.path.join('test', 'lsf_res.txt'))
+        if os.path.exists(os.path.join('test', 'fwhm.png')):
+            os.remove(os.path.join('test', 'fwhm.png'))
