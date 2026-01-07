@@ -116,12 +116,30 @@ This will run the task with the following setup:
 
 This task is designed to measure line spread function FWHM from a phantom
 containing one or more line sources. Given the approximate position of a slice of
-line source, this task will calculate the FWHM using the NEMA-algorithm (described
-below) in a given direction. Several source positions and directions can be given
+line source, this task will calculate the FWHM in a given direction using the NEMA-algorithm
+and by fitting a gaussian function to the line profile. 
+Several source positions and directions can be given
 in which case an average and a standard error is computed.
+
+For a given source, the line profile will always be made to go through the maximum
+intensity voxel. The position of that voxel is found by searching all voxels in the
+neighbourhood of the center position.
 
 It is always assumed that the line sources lie along the z-axis. If this is not the case
 the image will have to be transformed first.
 
-FWHM algorithm:
-Let $\mathbf{y}$ be a vector containing a line profile through the source.
+The output of the computation will be a text file containing the measured FWHM from
+both the NEMA and gauss fitting procedures, as well as an image file showing the line
+profile along with a depiction of the fits.
+
+Syntax:
+```
+> python -m nmiq lsf -i img.dcm -o res --start_z 980.1 --end_z 1102.1 --center_x 10.5 20.1 --center_y 30.4 15.1 --radius 30 30 --direction x y
+```
+This will run the task with the following setup:
+* The image will be loaded from the image file ```img.dcm```.
+* There are two line sources of interest: one at $x=10.5, y=30.4$ and another at $x=20.1, y=15.1$
+* The first line source will be measured in the $x$-direction with the correct $y$-index being automatically found within a 30mm distance from the center voxel
+* The second line source will be measured in the $y$-direction with the correct $x$-index being automatically found within a 30mm distance from the center voxel
+* The line profiles will include all voxels within 30mm from the center voxels.
+* The numerical results and an image file showing the fits will be put in the ```res```-folder.
