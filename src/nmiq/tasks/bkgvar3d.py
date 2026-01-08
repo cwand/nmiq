@@ -35,12 +35,16 @@ def bkgvar3d(task_dict: dict[str, Any]):
 
     Given these inputs, a number of spherical ROIs with the given radius will
     be placed inside the cylinder, and the background variability measured
-    from the mean values inside each ROI.
+    from the mean values inside each ROI. The standard error of the background
+    variability will be estimated by jackknife resampling.
     Two files will be created as output: A text file containing the numerical
     results of the computation and an image file containing the spherical ROIs.
     """
 
+    # Get image
     img = task_dict['image']
+
+    # Compute masks given cylinder and ROI geometry
     mask = nmiq.spheres_in_cylinder_3d(
         image_size=img.GetSize(),
         image_spacing=img.GetSpacing(),
@@ -53,16 +57,20 @@ def bkgvar3d(task_dict: dict[str, Any]):
         roi_radius=task_dict['roi_radius']
     )
 
+    # Find the number of spheres placed in the cylinder
     max_label = np.max(sitk.GetArrayFromImage(mask))
 
+    # Compute the mean voxel intensity in each spehere
     label_stats_filter = sitk.LabelStatisticsImageFilter()
     label_stats_filter.Execute(img, mask)
     means = np.zeros(max_label)
     for label in range(max_label):
         means[label] = label_stats_filter.GetMean(label + 1)
 
+    # Compute background variability and standard error
     bkg_var, se = nmiq.jackknife(_bkg_var_func, means)
 
+    # Write output
     mask_write_path = os.path.join(task_dict['output_path'],
                                    'bkgvar3d_mask.nii.gz')
     sitk.WriteImage(mask, mask_write_path)

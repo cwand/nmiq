@@ -93,7 +93,6 @@ class TestLSF_task(unittest.TestCase):
             self.assertEqual("S.E.:", line3[0])
             self.assertAlmostEqual(0.41674, float(line3[1]), places=5)
 
-
     def test_fwhm_with_spacing_resfile(self):
 
         img = sitk.Image((100, 100, 100), sitk.sitkFloat32)
@@ -249,7 +248,6 @@ class TestLSF_task(unittest.TestCase):
         nmiq.tasks.lsf(task_dict)
 
         self.assertTrue(os.path.isfile(os.path.join('test', 'fwhm.png')))
-
 
     def test_fwhm_errors_unequal_group_lengths(self):
 
