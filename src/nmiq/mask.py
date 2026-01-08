@@ -1,0 +1,168 @@
+import SimpleITK as sitk
+import numpy as np
+
+
+def _check_bounds(image: sitk.Image,
+                  physical_point: tuple[float, float, float]) -> bool:
+    """
+    Check whether a physical point is inside the image boundary (inside the
+    Brillouin zone of a voxel).
+    """
+
+    # Transform physical point to index
+    index = image.TransformPhysicalPointToIndex(physical_point)
+
+    # Get the image size
+    size = image.GetSize()
+
+    # Check if the indices are within the image bounds
+    for i in range(len(index)):
+        if index[i] < 0 or index[i] >= size[i]:
+            return False
+    return True
+
+
+def spheres_in_cylinder_3d(
+        image_size: tuple[int, int, int],
+        image_spacing: tuple[int, int, int],
+        image_origin: tuple[int, int, int],
+        cylinder_start_z: float,
+        cylinder_end_z: float,
+        cylinder_center_x: float,
+        cylinder_center_y: float,
+        cylinder_radius: float,
+        roi_radius: float) -> sitk.Image:
+    """
+    Given a cylinder, defined by the (x, y) coordinates of the cylinder axis
+    (which points in the z-direction), the start and end positions of the
+    cylinder i the z-dimension and the cylinder radius, this function places
+    a set of spheres of a given radius inside the cylinder.
+    The spheres will be defined in a voxelised grid with a given size and
+    spacing. Therefore the quality of the spheres depend on the resolution
+    given. In broad terms, the algorithm works as follows:
+    The cylinder is sliced into pieces along the z-axis with a length equal
+    to the diameter of the spheres (+ a small margin to make sure spheres do
+    not overlap). Each piece of cylinder is cut into concentric shells with
+    thickness equal to the sphere diameter (again + a small safety margin).
+    Spheres are then distributed in each of these concentric shells in each
+    of the pieces. Each sphere is defined by its central position, and a given
+    voxel is deemed to belong to the sphere if its centre is at most one radius
+    away from the centre point.
+    All spheres will be given a separate integer label, which will be written
+    to the output SimpleITK image object.
+    Parameters:
+        image_size          --  The voxel grid dimension
+        image_spacing       --  The physical spacing between voxels
+        image_origin        --  The physical position of the (0,0,0)-voxel
+        cylinder_start_z    --  The start position of the cylinder
+        cylinder_end_z      --  The end position of the cylinder
+        cylinder_center_x   --  The x-coordinate of the cylinder centre
+        cylinder_center_y   --  The y-coordinate of the cylinder centre
+        cylinder_radius     --  The radius of the cylinder
+        roi_radius          --  The radius of the spheres
+    """
+
+    # Create the output image
+    img = sitk.Image(image_size, sitk.sitkUInt8)
+    img.SetOrigin(image_origin)
+    img.SetSpacing(image_spacing)
+
+    # Sanity checks:
+
+    # Check ROI radius fits inside cylinder length at least once
+    if roi_radius > 0.5 * (cylinder_end_z - cylinder_start_z):
+        raise ValueError(
+            f"ROI radius does not fit into cylinder length: "
+            f"{roi_radius} > {(cylinder_end_z - cylinder_start_z)}.")
+
+    # Check ROI radius fits inside cylinder radius at least once
+    if roi_radius > cylinder_radius:
+        raise ValueError(f"ROI radius does not fit into cylinder radius: "
+                         f"{roi_radius} > {cylinder_radius}.")
+
+    # Check cylinder fits inside image space
+    cyl_min_x = cylinder_center_x - cylinder_radius
+    cyl_max_x = cylinder_center_x + cylinder_radius
+    cyl_min_y = cylinder_center_y - cylinder_radius
+    cyl_max_y = cylinder_center_y + cylinder_radius
+    check_points = [
+        (cyl_min_x, cyl_min_y, cylinder_start_z),
+        (cyl_max_x, cyl_max_y, cylinder_end_z),
+    ]
+    for point in check_points:
+        if not _check_bounds(img, point):
+            raise ValueError(
+                f"Cylinder exceeds image space: "
+                f"({point[0]}, {point[1]}, {point[2]}) outside image.")
+
+    # Sanity checks OK - start masking
+
+    # Initiate sphere labels
+    label = 1
+
+    # Get the central z-cooridnate of the first cylinder piece.
+    roi_center_z = cylinder_start_z + roi_radius
+    # Iterate through pieces along the z-direction
+    while roi_center_z + roi_radius < cylinder_end_z:
+
+        # First concentric shell starts from the outside
+        conc_cylinder_radius = cylinder_radius
+        # Iterate through concentric radii
+        while conc_cylinder_radius >= roi_radius:
+
+            # Calculate the radius of the spheres and the number that can fit
+            if roi_radius > conc_cylinder_radius / 2.0:
+                # Only room for one sphere
+                placement_radius = 0.0
+                n = 1
+            else:
+                # Spheres will be by the perimeter of the cylinder
+                placement_radius = conc_cylinder_radius - roi_radius
+                # Calculate number of spheres:
+                n = np.floor(np.pi / np.arcsin(
+                    roi_radius / (conc_cylinder_radius - roi_radius)
+                ))
+
+            # Iterate through each ROI in the shell
+            for s in range(int(n)):
+                # Determine center point of ROI. (First sphere at 12 o'clock)
+                roi_center_x = (cylinder_center_x -
+                                placement_radius * np.sin(2 * s * np.pi / n))
+                roi_center_y = (cylinder_center_y -
+                                placement_radius * np.cos(2 * s * np.pi / n))
+                # Find a bounding box around centre voxel
+                lower_index = img.TransformPhysicalPointToIndex(
+                    (roi_center_x - roi_radius,
+                     roi_center_y - roi_radius,
+                     roi_center_z - roi_radius))
+                upper_index = img.TransformPhysicalPointToIndex(
+                    (roi_center_x + roi_radius,
+                     roi_center_y + roi_radius,
+                     roi_center_z + roi_radius)
+                )
+                # Iterate through bounding box to check if voxel belongs
+                for ix in range(lower_index[0], upper_index[0] + 1):
+                    for iy in range(lower_index[1], upper_index[1] + 1):
+                        for iz in range(lower_index[2], upper_index[2] + 1):
+                            voxel_center_point = (
+                                img.TransformIndexToPhysicalPoint((ix, iy, iz))
+                            )
+                            d2 = ((voxel_center_point[0] - roi_center_x) ** 2 +
+                                  (voxel_center_point[1] - roi_center_y) ** 2 +
+                                  (voxel_center_point[2] - roi_center_z) ** 2)
+                            if d2 <= roi_radius ** 2:
+                                # Voxel centre inside radius. Add to label.
+                                img.SetPixel(ix, iy, iz, label)
+
+                label = label + 1
+
+            # Decrease concentric shell radius by one sphere diamater and a
+            # safety margin
+            conc_cylinder_radius = (conc_cylinder_radius - 2 * roi_radius -
+                                    max(img.GetSpacing()[0],
+                                        img.GetSpacing()[1]))
+
+        # Advance to next cylinder piece in the z-direction.
+        roi_center_z = roi_center_z + 2 * roi_radius + img.GetSpacing()[2]
+
+    return img
