@@ -99,7 +99,7 @@ def main(sys_args: list[str]):
         task_dict['end_z'] = float(args.end_z)
         task_dict['delta_z'] = float(args.delta_z)
         task_dict['center_x'] = [float(x) for x in args.center_x]
-        task_dict['center_y'] = [float(x) for x in args.center_x]
+        task_dict['center_y'] = [float(x) for x in args.center_y]
         task_dict['direction'] = args.direction
         task_dict['radius'] = [float(x) for x in args.radius]
         task_dict['output_path'] = args.o

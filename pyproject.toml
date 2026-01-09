@@ -7,8 +7,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nmiq"
-version = "0.0.1"
-requires-python = ">= 3.10"
+version = "0.0.2"
+requires-python = ">= 3.12"
 authors = [
 	{name = "Chris Walther Andersen", email = "cwa@rsyd.dk"},
 ]
@@ -24,8 +24,6 @@ classifiers = [
 	# Pick your license as you wish (see also "license" above)
 	"License :: OSI Approved :: MIT License",
 	# Specify the Python versions you support here.
-	"Programming Language :: Python :: 3.10",
-	"Programming Language :: Python :: 3.11",
 	"Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
 	"Programming Language :: Python :: 3.14",
