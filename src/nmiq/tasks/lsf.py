@@ -43,6 +43,9 @@ def lsf(task_dict: dict[str, Any]):
     generated where the fits to the line profiles can be inspected.
     """
 
+    print("Starting LSF task.")
+    print()
+
     # Get image and numpy voxel array
     img = task_dict['image']
     img_data = sitk.GetArrayFromImage(img)
@@ -104,10 +107,20 @@ def lsf(task_dict: dict[str, Any]):
 
             # Create line profile through maximum voxel
             if direction == 'x':
+                print(f'Computing FWHM at '
+                      f'x={center_x - radius}:{center_x + radius}, '
+                      f'y={img.TransformIndexToPhysicalPoint(
+                          peak_idx)[1]:.1f}, '
+                      f'z={z}')
                 profile = img_data[z_idx, peak_idx[1], min_idx[0]:max_idx[0]+1]
                 x_data = np.arange(min_idx[0], max_idx[0] + 1)
                 spacing = float(img.GetSpacing()[0])
             elif direction == 'y':
+                print(f'Computing FWHM at '
+                      f'x={img.TransformIndexToPhysicalPoint(
+                          peak_idx)[0]:.1f}, '
+                      f'y={center_y - radius}:{center_y + radius}, '
+                      f'z={z}')
                 profile = img_data[z_idx, min_idx[1]:max_idx[1]+1, peak_idx[0]]
                 x_data = np.arange(min_idx[1], max_idx[1] + 1)
                 spacing = float(img.GetSpacing()[1])
@@ -116,9 +129,13 @@ def lsf(task_dict: dict[str, Any]):
 
             # Calculate FWHM (multiplied by spacing to get physical value)
             nema_fwhm = nmiq.nema_fwhm_from_line_profile(profile)
-            nema_fwhms.append(spacing * nema_fwhm[0])
+            nema_fwhm_phys = spacing * nema_fwhm[0]
+            nema_fwhms.append(nema_fwhm_phys)
             gauss_fwhm = nmiq.gaussfit_fwhm_from_line_profile(profile)
-            gauss_fwhms.append(spacing * gauss_fwhm[2])
+            gauss_fwhm_phys = spacing * gauss_fwhm[2]
+            gauss_fwhms.append(gauss_fwhm_phys)
+            print(f'NEMA FWHM = {nema_fwhm_phys:.2f}, '
+                  f'Gauss FWHM = {gauss_fwhm_phys:.2f}.')
 
             # Plot line profile and fits
             x_plot_gauss = np.linspace(np.min(x_data), np.max(x_data), 1000)
@@ -163,6 +180,7 @@ def lsf(task_dict: dict[str, Any]):
                                  f'z = {z}')
             axs[iz, i].grid()
 
+    print("All FWHM calculations done. Printing output.")
     axs[0, 0].legend()
     fig.supxlabel('Voxel index')
     fig.supylabel('Voxel intensity')
@@ -183,3 +201,6 @@ def lsf(task_dict: dict[str, Any]):
         f.write(f"S.E.:\t{float(nema_se)}\n")
         f.write(f"Gauss:\t{float(gauss_fwhm_mean)}\n")
         f.write(f"S.E.:\t{float(gauss_se)}\n")
+
+    print("LSF task done!")
+    print()

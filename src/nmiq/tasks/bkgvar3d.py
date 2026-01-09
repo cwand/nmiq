@@ -41,10 +41,14 @@ def bkgvar3d(task_dict: dict[str, Any]):
     results of the computation and an image file containing the spherical ROIs.
     """
 
+    print("Starting BKGVAR3D task.")
+    print()
+
     # Get image
     img = task_dict['image']
 
     # Compute masks given cylinder and ROI geometry
+    print("Placing spheres in cylinder.")
     mask = nmiq.spheres_in_cylinder_3d(
         image_size=img.GetSize(),
         image_spacing=img.GetSpacing(),
@@ -59,18 +63,23 @@ def bkgvar3d(task_dict: dict[str, Any]):
 
     # Find the number of spheres placed in the cylinder
     max_label = np.max(sitk.GetArrayFromImage(mask))
+    print(f'{max_label} spheres placed in cylinder.')
 
     # Compute the mean voxel intensity in each spehere
     label_stats_filter = sitk.LabelStatisticsImageFilter()
     label_stats_filter.Execute(img, mask)
     means = np.zeros(max_label)
     for label in range(max_label):
-        means[label] = label_stats_filter.GetMean(label + 1)
+        m = label_stats_filter.GetMean(label + 1)
+        print(f'Sphere {label} mean = {m:.2f}')
+        means[label] = m
 
     # Compute background variability and standard error
     bkg_var, se = nmiq.jackknife(_bkg_var_func, means)
+    print(f"Result: N = {bkg_var:.4f} +/- {se:.4f}")
 
     # Write output
+    print("Writing output.")
     mask_write_path = os.path.join(task_dict['output_path'],
                                    'bkgvar3d_mask.nii.gz')
     sitk.WriteImage(mask, mask_write_path)
@@ -80,3 +89,5 @@ def bkgvar3d(task_dict: dict[str, Any]):
         f.write(f"Result:\t{float(bkg_var)}\n")
         f.write(f"S.E.:\t{float(se)}\n")
         f.write(f"K:\t{int(max_label)}\n")
+    print("BKGVAR3D task completed.")
+    print()
