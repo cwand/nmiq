@@ -166,3 +166,72 @@ def spheres_in_cylinder_3d(
         roi_center_z = roi_center_z + 2 * roi_radius + img.GetSpacing()[2]
 
     return img
+
+
+def hottest_cylinder_3d(
+        image: sitk.Image,
+        cylinder_start_z: float,
+        cylinder_end_z: float,
+        cylinder_center_x: float,
+        cylinder_center_y: float,
+        cylinder_radius: float,
+        radius: float) -> sitk.Image:
+
+    mask = sitk.Image(image.GetSize(), sitk.sitkUInt16)
+    mask.CopyInformation(image)
+
+    # Sanity checks:
+
+    # Check cylinder fits inside image space
+    cyl_min_x = cylinder_center_x - cylinder_radius
+    cyl_max_x = cylinder_center_x + cylinder_radius
+    cyl_min_y = cylinder_center_y - cylinder_radius
+    cyl_max_y = cylinder_center_y + cylinder_radius
+    check_points = [
+        (cyl_min_x, cyl_min_y, cylinder_start_z),
+        (cyl_max_x, cyl_max_y, cylinder_end_z),
+    ]
+    for point in check_points:
+        if not _check_bounds(mask, point):
+            raise ValueError(
+                f"Cylinder exceeds image space: "
+                f"({point[0]}, {point[1]}, {point[2]}) outside image.")
+
+    # Sanity checks OK, start masking
+
+    # Convert extreme points to indices
+    min_search_point = (cylinder_center_x - radius,
+                        cylinder_center_y - radius,
+                        cylinder_start_z)
+    min_index = image.TransformPhysicalPointToIndex(min_search_point)
+    max_search_point = (cylinder_center_x + radius,
+                        cylinder_center_y + radius,
+                        cylinder_end_z)
+    max_index = image.TransformPhysicalPointToIndex(max_search_point)
+
+    # Iterate through z-slices from start to end
+    iz = min_index[2]
+    while iz <= max_index[2]:
+
+        # First find optimum centre voxel
+        for ix in range(min_index[0], max_index[0] + 1):
+            for iy in range(min_index[1], max_index[1] + 1):
+                # Create circular mask with value 2 centred at this voxel
+                centre_point = image.TransformIndexToPhysicalPoint(
+                    (ix, iy, iz))
+                for ix2 in range(min_index[0], max_index[0] + 1):
+                    for iy2 in range(min_index[1], max_index[1] + 1):
+                        vox_point = image.TransformIndexToPhysicalPoint(
+                            (ix2, iy2, iz))
+                        if ((centre_point[0] - vox_point[0])**2 +
+                                (centre_point[1] - vox_point[1])**2 +
+                                (centre_point[2] - vox_point[2])**2 <=
+                                cylinder_radius**2):
+                            mask[ix2, iy2, iz] = 2
+
+
+        iz += 1
+
+
+
+    return mask
