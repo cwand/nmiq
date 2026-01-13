@@ -25,6 +25,16 @@ def spheres_in_cylinder_3d(
         cylinder_radius: float,
         roi_radius: float) -> sitk.Image: ...
 
+def cylinder_3d(
+        image_size: tuple[int, int, int],
+        image_spacing: tuple[int, int, int],
+        image_origin: tuple[int, int, int],
+        cylinder_start_z: float,
+        cylinder_end_z: float,
+        cylinder_center_x: float,
+        cylinder_center_y: float,
+        cylinder_radius: float) -> sitk.Image: ...
+
 def hottest_cylinder_3d(
         image: sitk.Image,
         cylinder_start_z: float,
