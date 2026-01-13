@@ -465,6 +465,10 @@ class TestHottestCylinder3D(unittest.TestCase):
             radius=2.0
         )
 
+        self.assertEqual(np.max(mask), 1.0)
+        self.assertEqual(np.max(mask[:, :, 0]), 0.0)
+        self.assertEqual(np.max(mask[:, :, 1]), 0.0)
+
         self.assertEqual(mask[6, 6, 2], 1.0)
         self.assertEqual(mask[6, 7, 2], 0.0)
         self.assertEqual(mask[7, 6, 2], 0.0)
@@ -480,7 +484,149 @@ class TestHottestCylinder3D(unittest.TestCase):
         self.assertEqual(mask[7, 6, 4], 0.0)
         self.assertEqual(mask[7, 7, 4], 1.0)
 
-        self.assertEqual(mask[6, 6, 5], 1.0)
+        self.assertEqual(mask[6, 6, 5], 0.0)
         self.assertEqual(mask[6, 7, 5], 0.0)
         self.assertEqual(mask[7, 6, 5], 1.0)
         self.assertEqual(mask[7, 7, 5], 0.0)
+
+        self.assertEqual(np.max(mask[:, :, 6]), 0.0)
+        self.assertEqual(np.max(mask[:, :, 7]), 0.0)
+        self.assertEqual(np.max(mask[:, :, 8]), 0.0)
+        self.assertEqual(np.max(mask[:, :, 9]), 0.0)
+
+    def test_mask_correct_values_2(self):
+        src = sitk.Image((10, 10, 10), sitk.sitkFloat32)
+        src.SetSpacing((1, 1, 1))
+        src.SetOrigin((0, 0, 0))
+
+        src[1, 1, 2] = 1.0
+        src[2, 1, 2] = 2.0
+        src[3, 1, 2] = 2.0
+        src[4, 1, 2] = 3.0
+        src[5, 1, 2] = 2.0
+        src[6, 1, 2] = 3.0
+        src[7, 1, 2] = 1.0
+
+        src[1, 2, 2] = 3.0
+        src[2, 2, 2] = 5.0
+        src[3, 2, 2] = 4.0
+        src[4, 2, 2] = 4.0
+        src[5, 2, 2] = 5.0
+        src[6, 2, 2] = 2.0
+        src[7, 2, 2] = 1.0
+        src[8, 2, 2] = 1.0
+
+        src[1, 3, 2] = 4.0
+        src[2, 3, 2] = 9.0
+        src[3, 3, 2] = 7.0
+        src[4, 3, 2] = 7.0
+        src[5, 3, 2] = 5.0
+        src[6, 3, 2] = 2.0
+        src[7, 3, 2] = 1.0
+        src[8, 3, 2] = 2.0
+
+        src[1, 4, 2] = 3.0
+        src[2, 4, 2] = 5.0
+        src[3, 4, 2] = 8.0
+        src[4, 4, 2] = 8.0
+        src[5, 4, 2] = 3.0
+        src[6, 4, 2] = 4.0
+        src[7, 4, 2] = 3.0
+        src[8, 4, 2] = 1.0
+
+        src[1, 5, 2] = 5.0
+        src[2, 5, 2] = 6.0
+        src[3, 5, 2] = 9.0
+        src[4, 5, 2] = 6.0
+        src[5, 5, 2] = 5.0
+        src[6, 5, 2] = 5.0
+        src[7, 5, 2] = 4.0
+        src[8, 5, 2] = 2.0
+
+        src[1, 6, 2] = 3.0
+        src[2, 6, 2] = 4.0
+        src[3, 6, 2] = 3.0
+        src[4, 6, 2] = 5.0
+        src[5, 6, 2] = 3.0
+        src[6, 6, 2] = 2.0
+        src[7, 6, 2] = 1.0
+
+        src[1, 7, 2] = 2.0
+        src[2, 7, 2] = 3.0
+        src[3, 7, 2] = 1.0
+        src[4, 7, 2] = 2.0
+        src[5, 7, 2] = 1.0
+        src[6, 7, 2] = 2.0
+        src[7, 7, 2] = 2.0
+
+        src[2, 8, 2] = 1.0
+        src[3, 8, 2] = 2.0
+        src[4, 8, 2] = 1.0
+        src[5, 8, 2] = 1.0
+
+        mask = nmiq.mask.hottest_cylinder_3d(
+            image=src,
+            cylinder_start_z=2.0,
+            cylinder_end_z=5.0,
+            cylinder_center_x=2.0,
+            cylinder_center_y=3.0,
+            cylinder_radius=1.5,
+            radius=4.0
+        )
+
+        self.assertEqual(3, mask.GetDimension())
+        self.assertEqual((1, 1, 1), mask.GetSpacing())
+        self.assertEqual((0, 0, 0), mask.GetOrigin())
+        self.assertEqual((10, 10, 10), mask.GetSize())
+
+        data = sitk.GetArrayFromImage(mask)
+
+        self.assertEqual(np.max(mask), 1.0)
+        self.assertEqual(np.max(mask[0, :, :]), 0.0)
+        self.assertEqual(np.max(mask[1, :, :]), 0.0)
+
+        self.assertEqual(np.max(data[2, 0, :]), 0)
+        self.assertEqual(np.max(data[2, 1, :]), 0)
+        self.assertEqual(np.max(data[2, 2, :]), 0)
+        self.assertEqual(mask[0, 3, 2], 0)
+        self.assertEqual(mask[1, 3, 2], 0)
+        self.assertEqual(mask[2, 3, 2], 1)
+        self.assertEqual(mask[3, 3, 2], 1)
+        self.assertEqual(mask[4, 3, 2], 1)
+        self.assertEqual(mask[5, 3, 2], 0)
+        self.assertEqual(mask[6, 3, 2], 0)
+        self.assertEqual(mask[7, 3, 2], 0)
+        self.assertEqual(mask[8, 3, 2], 0)
+        self.assertEqual(mask[9, 3, 2], 0)
+        self.assertEqual(mask[0, 4, 2], 0)
+        self.assertEqual(mask[1, 4, 2], 0)
+        self.assertEqual(mask[2, 4, 2], 1)
+        self.assertEqual(mask[3, 4, 2], 1)
+        self.assertEqual(mask[4, 4, 2], 1)
+        self.assertEqual(mask[5, 4, 2], 0)
+        self.assertEqual(mask[6, 4, 2], 0)
+        self.assertEqual(mask[7, 4, 2], 0)
+        self.assertEqual(mask[8, 4, 2], 0)
+        self.assertEqual(mask[9, 4, 2], 0)
+        self.assertEqual(mask[0, 5, 2], 0)
+        self.assertEqual(mask[1, 5, 2], 0)
+        self.assertEqual(mask[2, 5, 2], 1)
+        self.assertEqual(mask[3, 5, 2], 1)
+        self.assertEqual(mask[4, 5, 2], 1)
+        self.assertEqual(mask[5, 5, 2], 0)
+        self.assertEqual(mask[6, 5, 2], 0)
+        self.assertEqual(mask[7, 5, 2], 0)
+        self.assertEqual(mask[8, 5, 2], 0)
+        self.assertEqual(mask[9, 5, 2], 0)
+        self.assertEqual(np.max(data[2, 6, :]), 0)
+        self.assertEqual(np.max(data[2, 7, :]), 0)
+        self.assertEqual(np.max(data[2, 8, :]), 0)
+        self.assertEqual(np.max(data[2, 9, :]), 0)
+
+        self.assertEqual(np.max(mask[:, :, 3]), 0.0)
+        self.assertEqual(np.max(mask[:, :, 4]), 0.0)
+        self.assertEqual(np.max(mask[:, :, 5]), 0.0)
+        self.assertEqual(np.max(mask[:, :, 6]), 0.0)
+        self.assertEqual(np.max(mask[:, :, 7]), 0.0)
+        self.assertEqual(np.max(mask[:, :, 8]), 0.0)
+        self.assertEqual(np.max(mask[:, :, 9]), 0.0)
