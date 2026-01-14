@@ -199,30 +199,30 @@ def cylinder_3d(
                 f"Cylinder exceeds image space: "
                 f"({point[0]}, {point[1]}, {point[2]}) outside image.")
 
-        # Convert extreme points to indices
-        min_search_point = (cylinder_center_x - cylinder_radius,
-                            cylinder_center_y - cylinder_radius,
-                            cylinder_start_z)
-        min_index = mask.TransformPhysicalPointToIndex(min_search_point)
-        max_search_point = (cylinder_center_x + cylinder_radius,
-                            cylinder_center_y + cylinder_radius,
-                            cylinder_end_z)
-        max_index = mask.TransformPhysicalPointToIndex(max_search_point)
+    # Convert extreme points to indices
+    min_search_point = (cylinder_center_x - cylinder_radius,
+                        cylinder_center_y - cylinder_radius,
+                        cylinder_start_z)
+    min_index = mask.TransformPhysicalPointToIndex(min_search_point)
+    max_search_point = (cylinder_center_x + cylinder_radius,
+                        cylinder_center_y + cylinder_radius,
+                        cylinder_end_z)
+    max_index = mask.TransformPhysicalPointToIndex(max_search_point)
 
-        # Iterate through z-slices from start to end
-        iz = min_index[2]
-        while iz <= max_index[2]:
+    # Iterate through z-slices from start to end
+    iz = min_index[2]
+    while iz <= max_index[2]:
 
-            # Check all voxels in search box for distance to center and include
-            for ix in range(min_index[0], max_index[0] + 1):
-                for iy in range(min_index[1], max_index[1] + 1):
-                    vox_point = mask.TransformIndexToPhysicalPoint((ix, iy, iz))
-                    if ((cylinder_center_x - vox_point[0]) ** 2 + (cylinder_center_y - vox_point[1]) ** 2
-                            <= cylinder_radius ** 2):
-                        mask[ix, iy, iz] = 1
+        # Check all voxels in search box for distance to center and include
+        for ix in range(min_index[0], max_index[0] + 1):
+            for iy in range(min_index[1], max_index[1] + 1):
+                vox_point = mask.TransformIndexToPhysicalPoint((ix, iy, iz))
+                if ((cylinder_center_x - vox_point[0]) ** 2 + (cylinder_center_y - vox_point[1]) ** 2
+                        <= cylinder_radius ** 2):
+                    mask[ix, iy, iz] = 1
 
-            # Move on to next z
-            iz += 1
+        # Move on to next z
+        iz += 1
 
     return mask
 
@@ -275,9 +275,14 @@ def hottest_cylinder_3d(
     iz = min_index[2]
     while iz <= max_index[2]:
 
+        # Get z-value
+        slice_point = image.TransformIndexToPhysicalPoint((0, 0, iz))
+        iz_phys = slice_point[2]
+
         # First find optimum centre voxel
-        max_sum = 0.0  # Placeholder
-        max_centre_point = (0.0, 0.0, 0.0)  # Placeholder
+        max_sum = 0.0  # Placeholders
+        max_centre_point = (cylinder_center_x, cylinder_center_y, iz_phys)
+
         for ix in range(min_index[0], max_index[0] + 1):
             for iy in range(min_index[1], max_index[1] + 1):
 

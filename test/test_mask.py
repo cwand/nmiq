@@ -394,7 +394,7 @@ class TestCylinder3D(unittest.TestCase):
                              'image_spacing': (1, 1, 1),
                              'image_origin': (0, 0, 0),
                              'cylinder_start_z': 6.0,
-                             'cylinder_end_z': 9.5,
+                             'cylinder_end_z': 9.6,
                              'cylinder_center_x': 6.0,
                              'cylinder_center_y': 6.0,
                              'cylinder_radius': 2.0})
@@ -895,7 +895,7 @@ class TestHottestCylinder3D(unittest.TestCase):
         mask = nmiq.mask.hottest_cylinder_3d(
             image=src,
             cylinder_start_z=2.0,
-            cylinder_end_z=5.0,
+            cylinder_end_z=2.1,
             cylinder_center_x=2.0,
             cylinder_center_y=3.0,
             cylinder_radius=1.5,
