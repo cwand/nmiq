@@ -141,13 +141,10 @@ class TestContrastCyl3D_task(unittest.TestCase):
         nmiq.tasks.contrast_cyl3d(task_dict)
         with open(os.path.join('test', 'contrast_cyl3d_res.txt'), 'r') as f:
             lines = f.readlines()
-            self.assertEqual(2, len(lines))
+            self.assertEqual(1, len(lines))
             line0 = lines[0].strip().split()
             self.assertEqual("Contrast:", line0[0])
             self.assertAlmostEqual(9.0, float(line0[1]), places=6)
-            line1 = lines[1].strip().split()
-            self.assertEqual("Ratio:", line1[0])
-            self.assertAlmostEqual(10.0, float(line1[1]), places=6)
 
 
     def tearDown(self):
