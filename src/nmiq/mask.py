@@ -234,10 +234,24 @@ def hottest_cylinder_3d(
         cylinder_center_x: float,
         cylinder_center_y: float,
         cylinder_radius: float,
-        radius: float) -> sitk.Image:
+        mask_size: tuple[int, int, int] = None,
+        mask_spacing: tuple[int, int, int] = None,
+        mask_origin: tuple[int, int, int] = None) -> sitk.Image:
 
-    mask = sitk.Image(image.GetSize(), sitk.sitkUInt16)
-    mask.CopyInformation(image)
+    if mask_size is None:
+        mask = sitk.Image(image.GetSize(), sitk.sitkUInt16)
+    else:
+        mask = sitk.Image(mask_size, sitk.sitkUInt16)
+
+    if mask_spacing is None:
+        mask.SetSpacing(image.GetSpacing())
+    else:
+        mask.SetSpacing(mask_spacing)
+
+    if image_origin is None:
+        mask.SetOrigin(image.GetOrigin())
+    else:
+        mask.SetOrigin(image_origin)
 
     # Sanity checks:
 
@@ -258,66 +272,79 @@ def hottest_cylinder_3d(
 
     # Sanity checks OK, start masking
 
-    # Convert extreme points to indices
-    min_search_point = (cylinder_center_x - radius,
-                        cylinder_center_y - radius,
-                        cylinder_start_z)
-    min_index = image.TransformPhysicalPointToIndex(min_search_point)
-    max_search_point = (cylinder_center_x + radius,
-                        cylinder_center_y + radius,
-                        cylinder_end_z)
-    max_index = image.TransformPhysicalPointToIndex(max_search_point)
+    # Convert centre point to index
+    start_point = (cylinder_center_x, cylinder_center_y, cylinder_start_z)
+    start_index = mask.TransformPhysicalPointToIndex(start_point)
+    end_point = (cylinder_center_x, cylinder_center_y, cylinder_end_z)
+    end_index = mask.TransformPhysicalPointToIndex(end_point)
+
+    # Convert radius to index in x- and y-direction
+    x_idx_radius = int(np.ceil(cylinder_radius / image.GetSpacing()[0]))
+    y_idx_radius = int(np.ceil(cylinder_radius / image.GetSpacing()[1]))
 
     # Prepare stats filter for testing mask
     label_stats_filter = sitk.LabelStatisticsImageFilter()
 
     # Iterate through z-slices from start to end
-    iz = min_index[2]
-    while iz <= max_index[2]:
+    iz = start_index[2]
+    while iz <= end_index[2]:
 
-        # Get z-value
-        slice_point = image.TransformIndexToPhysicalPoint((0, 0, iz))
-        iz_phys = slice_point[2]
+        search_dict = {}
+        max_val = -1.0
+        max_index = (0, 0, 0)
 
-        # First find optimum centre voxel
-        max_sum = 0.0  # Placeholders
-        max_centre_point = (cylinder_center_x, cylinder_center_y, iz_phys)
+        # Start search at centre point
+        index_list = [(start_index[0], start_index[1], iz)]
+        while index_list:
+            index = index_list.pop()
+            print(f'Testing index {index}:')
+            if index not in search_dict:
 
-        for ix in range(min_index[0], max_index[0] + 1):
-            for iy in range(min_index[1], max_index[1] + 1):
+                point = image.TransformIndexToPhysicalPoint(index)
 
-                # Create circular mask with value 2 centred at this voxel
-                centre_point = image.TransformIndexToPhysicalPoint(
-                    (ix, iy, iz))
-                for ix2 in range(min_index[0], max_index[0] + 1):
-                    for iy2 in range(min_index[1], max_index[1] + 1):
+                for ix in range(index[0] - x_idx_radius,
+                                index[0] + x_idx_radius + 1):
+                    for iy in range(index[1] - y_idx_radius,
+                                    index[1] + y_idx_radius + 1):
+                        # Calculate distance between voxel and centre
                         vox_point = image.TransformIndexToPhysicalPoint(
-                            (ix2, iy2, iz))
-                        if ((centre_point[0] - vox_point[0])**2 +
-                                (centre_point[1] - vox_point[1])**2 +
-                                (centre_point[2] - vox_point[2])**2 <=
-                                cylinder_radius**2):
-                            mask[ix2, iy2, iz] = 2
-
-                # Calculate voxel sum for this mask (sum instead of mean to discourage ROIs on edges).
+                            (ix, iy, iz))
+                        r2 = ((point[0] - vox_point[0]) ** 2 +
+                              (point[1] - vox_point[1]) ** 2)
+                        # Mask if within radius
+                        if r2 <= cylinder_radius ** 2:
+                            mask[ix, iy, iz] = 2
                 label_stats_filter.Execute(image, mask)
-                this_sum = label_stats_filter.GetSum(2)
-                if this_sum > max_sum:
-                    max_sum = this_sum
-                    max_centre_point = centre_point
+                cur_val = label_stats_filter.GetSum(2)
+                # Reset mask
+                for ix in range(index[0] - x_idx_radius,
+                                index[0] + x_idx_radius + 1):
+                    for iy in range(index[1] - y_idx_radius,
+                                    index[1] + y_idx_radius + 1):
+                        mask[ix, iy, iz] = 0
 
-                # Reset mask for next attempt
-                for ix2 in range(min_index[0], max_index[0] + 1):
-                    for iy2 in range(min_index[1], max_index[1] + 1):
-                        mask[ix2, iy2, iz] = 0
+                search_dict[index] = cur_val
+                if cur_val > max_val:
+                    max_val = cur_val
+                    max_index = index
+                    index_list.append((index[0] - 1, index[1], index[2]))
+                    index_list.append((index[0] + 1, index[1], index[2]))
+                    index_list.append((index[0], index[1] - 1, index[2]))
+                    index_list.append((index[0], index[1] + 1, index[2]))
 
-        # Re-create optimal mask with label 1
-        for ix in range(min_index[0], max_index[0] + 1):
-            for iy in range(min_index[1], max_index[1] + 1):
+        # Draw final mask
+        point = image.TransformIndexToPhysicalPoint(max_index)
+        for ix in range(max_index[0] - x_idx_radius,
+                        max_index[0] + x_idx_radius + 1):
+            for iy in range(max_index[1] - y_idx_radius,
+                            max_index[1] + y_idx_radius + 1):
+                # Calculate distance between voxel and centre
                 vox_point = image.TransformIndexToPhysicalPoint(
                     (ix, iy, iz))
-                if ((max_centre_point[0] - vox_point[0]) ** 2 + (max_centre_point[1] - vox_point[1]) ** 2 +
-                        (max_centre_point[2] - vox_point[2]) ** 2 <= cylinder_radius ** 2):
+                r2 = ((point[0] - vox_point[0]) ** 2 +
+                      (point[1] - vox_point[1]) ** 2)
+                # Mask if within radius
+                if r2 <= cylinder_radius ** 2:
                     mask[ix, iy, iz] = 1
 
         # Move on to next z

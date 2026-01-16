@@ -42,7 +42,9 @@ def hottest_cylinder_3d(
         cylinder_center_x: float,
         cylinder_center_y: float,
         cylinder_radius: float,
-        radius: float) -> sitk.Image: ...
+        image_size: tuple[int, int, int] = ...,
+        image_spacing: tuple[int, int, int] = ...,
+        image_origin: tuple[int, int, int] = ...) -> sitk.Image: ...
 
 def nema_fwhm_from_line_profile(
         line_profile: npt.NDArray[np.float64]) \

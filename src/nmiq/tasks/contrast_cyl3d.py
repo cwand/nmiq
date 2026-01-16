@@ -52,8 +52,7 @@ def contrast_cyl3d(task_dict: dict[str, Any]):
         cylinder_end_z=task_dict['end_z'],
         cylinder_center_x=task_dict['cylinder_center_x'],
         cylinder_center_y=task_dict['cylinder_center_y'],
-        cylinder_radius=task_dict['cylinder_radius'],
-        radius=task_dict['radius']
+        cylinder_radius=task_dict['cylinder_radius']
     )
     print("Placing background cylinder.")
     bkg_mask = nmiq.cylinder_3d(

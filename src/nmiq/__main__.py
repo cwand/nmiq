@@ -97,6 +97,7 @@ def main(sys_args: list[str]):
                 new_spacing.append(float(spacings[i]))
         img2 = nmiq.resample_image(img, tuple(new_spacing))
         task_dict['image'] = img2
+        task_dict['orig_image'] = img
 
     if args.task == 'summary':
         nmiq.tasks.summary(task_dict)
@@ -130,7 +131,6 @@ def main(sys_args: list[str]):
         task_dict['background_center_x'] = float(args.bkg_center_x)
         task_dict['background_center_y'] = float(args.bkg_center_y)
         task_dict['cylinder_radius'] = float(args.cyl_radius)
-        task_dict['radius'] = float(args.radius[0])
         task_dict['output_path'] = args.o
         nmiq.tasks.contrast_cyl3d(task_dict)
         print()
