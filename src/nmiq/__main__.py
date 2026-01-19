@@ -18,7 +18,8 @@ def main(sys_args: list[str]):
     parser = argparse.ArgumentParser()
 
     parser.add_argument('task',
-                        choices=['summary', 'bkgvar3d', 'lsf'],
+                        choices=['summary', 'bkgvar3d', 'lsf',
+                                 'contrast_cyl3d'],
                         help="The task to run")
 
     parser.add_argument('-i',
@@ -33,9 +34,11 @@ def main(sys_args: list[str]):
                              'where a 0 means the original spacing should '
                              'be kept for that dimension.')
     parser.add_argument('--start_z',
-                        help='Start z-coordinate [usage: bkgvar3d, lsf]')
+                        help='Start z-coordinate '
+                             '[usage: bkgvar3d, lsf, contrast_cyl3d]')
     parser.add_argument('--end_z',
-                        help='End z-coordinate [usage: bkgvar3d, lsf]')
+                        help='End z-coordinate '
+                             '[usage: bkgvar3d, lsf, contrast_cyl3d]')
     parser.add_argument('--delta_z',
                         help='Spacing between slices in z-direction '
                              '[usage: lsf]')
@@ -43,12 +46,26 @@ def main(sys_args: list[str]):
                         help='Center x-coordinate [usage: bkgvar3d, lsf]')
     parser.add_argument('--center_y', nargs='*',
                         help='Start y-coordinate [usage: bkgvar3d, lsf]')
+    parser.add_argument('--cyl_center_x',
+                        help='Cylinder center x-coordinate '
+                             '[usage: contrast_cyl3d]')
+    parser.add_argument('--cyl_center_y',
+                        help='Cylinder center y-coordinate '
+                             '[usage: contrast_cyl3d]')
+    parser.add_argument('--bkg_center_x',
+                        help='Background center x-coordinate '
+                             '[usage: contrast_cyl3d]')
+    parser.add_argument('--bkg_center_y',
+                        help='Background center y-coordinate '
+                             '[usage: contrast_cyl3d]')
     parser.add_argument('--direction', nargs='*', choices=['x', 'y'],
                         help='Line profile direction [usage: lsf]')
     parser.add_argument('--radius', nargs='*',
-                        help='Line profile radius [usage: lsf]')
+                        help='Radius '
+                             '[usage: lsf, contrast_cyl3d]')
     parser.add_argument('--cyl_radius',
-                        help='Cylinder radius [usage: bkgvar3d]')
+                        help='Cylinder radius '
+                             '[usage: bkgvar3d, contrast_cyl3d]')
     parser.add_argument('--roi_radius',
                         help='ROI radius [usage: bkgvar3d]')
 
@@ -80,6 +97,7 @@ def main(sys_args: list[str]):
                 new_spacing.append(float(spacings[i]))
         img2 = nmiq.resample_image(img, tuple(new_spacing))
         task_dict['image'] = img2
+        task_dict['orig_image'] = img
 
     if args.task == 'summary':
         nmiq.tasks.summary(task_dict)
@@ -104,6 +122,17 @@ def main(sys_args: list[str]):
         task_dict['radius'] = [float(x) for x in args.radius]
         task_dict['output_path'] = args.o
         nmiq.tasks.lsf(task_dict)
+        print()
+    if args.task == 'contrast_cyl3d':
+        task_dict['start_z'] = float(args.start_z)
+        task_dict['end_z'] = float(args.end_z)
+        task_dict['cylinder_center_x'] = float(args.cyl_center_x)
+        task_dict['cylinder_center_y'] = float(args.cyl_center_y)
+        task_dict['background_center_x'] = float(args.bkg_center_x)
+        task_dict['background_center_y'] = float(args.bkg_center_y)
+        task_dict['cylinder_radius'] = float(args.cyl_radius)
+        task_dict['output_path'] = args.o
+        nmiq.tasks.contrast_cyl3d(task_dict)
         print()
 
     # Report successful end of program

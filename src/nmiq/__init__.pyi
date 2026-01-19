@@ -25,6 +25,28 @@ def spheres_in_cylinder_3d(
         cylinder_radius: float,
         roi_radius: float) -> sitk.Image: ...
 
+def cylinder_3d(
+        image_size: tuple[int, int, int],
+        image_spacing: tuple[float, float, float],
+        image_origin: tuple[float, float, float],
+        cylinder_start_z: float,
+        cylinder_end_z: float,
+        cylinder_center_x: float,
+        cylinder_center_y: float,
+        cylinder_radius: float) -> sitk.Image: ...
+
+def hottest_cylinder_3d(
+        image: sitk.Image,
+        cylinder_start_z: float,
+        cylinder_end_z: float,
+        cylinder_center_x: float,
+        cylinder_center_y: float,
+        cylinder_radius: float,
+        mask_size: tuple[int, int, int] | None = ...,
+        mask_spacing: tuple[float, float, float] | None = ...,
+        mask_origin: tuple[float, float, float] | None = ...)\
+        -> sitk.Image: ...
+
 def nema_fwhm_from_line_profile(
         line_profile: npt.NDArray[np.float64]) \
         -> tuple[float, dict[str, Any]]: ...

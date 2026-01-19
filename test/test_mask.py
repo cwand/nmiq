@@ -313,3 +313,680 @@ class TestSpheresInCylinder3D(unittest.TestCase):
         self.assertEqual((17, 17, 17), img.GetSize())
 
         self.assertEqual(56, np.max(sitk.GetArrayFromImage(img)))
+
+
+class TestCylinder3D(unittest.TestCase):
+
+    def test_mask_size(self):
+        mask = nmiq.mask.cylinder_3d(
+            image_size=(10, 10, 10),
+            image_spacing=(1, 1, 1),
+            image_origin=(0, 0, 0),
+            cylinder_start_z=2.0,
+            cylinder_end_z=5.0,
+            cylinder_center_x=2.0,
+            cylinder_center_y=3.0,
+            cylinder_radius=1.5,
+        )
+        self.assertEqual(3, mask.GetDimension())
+        self.assertEqual((1, 1, 1), mask.GetSpacing())
+        self.assertEqual((0, 0, 0), mask.GetOrigin())
+        self.assertEqual((10, 10, 10), mask.GetSize())
+
+    def test_cylinder_fits_inside_image_x_left(self):
+        self.assertRaises(ValueError, nmiq.mask.cylinder_3d,
+                          **{'image_size': (10, 10, 10),
+                             'image_spacing': (1, 1, 1),
+                             'image_origin': (0, 0, 0),
+                             'cylinder_start_z': 2.0,
+                             'cylinder_end_z': 5.0,
+                             'cylinder_center_x': 2.0,
+                             'cylinder_center_y': 3.0,
+                             'cylinder_radius': 2.6})
+
+    def test_cylinder_fits_inside_image_x_right(self):
+        self.assertRaises(ValueError, nmiq.mask.cylinder_3d,
+                          **{'image_size': (10, 10, 10),
+                             'image_spacing': (1, 1, 1),
+                             'image_origin': (0, 0, 0),
+                             'cylinder_start_z': 2.0,
+                             'cylinder_end_z': 5.0,
+                             'cylinder_center_x': 8.0,
+                             'cylinder_center_y': 3.0,
+                             'cylinder_radius': 2.6})
+
+    def test_cylinder_fits_inside_image_y_top(self):
+        self.assertRaises(ValueError, nmiq.mask.cylinder_3d,
+                          **{'image_size': (10, 10, 10),
+                             'image_spacing': (1, 1, 1),
+                             'image_origin': (0, 0, 0),
+                             'cylinder_start_z': 2.0,
+                             'cylinder_end_z': 5.0,
+                             'cylinder_center_x': 7.0,
+                             'cylinder_center_y': 2.0,
+                             'cylinder_radius': 2.6})
+
+    def test_cylinder_fits_inside_image_y_bottom(self):
+        self.assertRaises(ValueError, nmiq.mask.cylinder_3d,
+                          **{'image_size': (10, 10, 10),
+                             'image_spacing': (1, 1, 1),
+                             'image_origin': (0, 0, 0),
+                             'cylinder_start_z': 2.0,
+                             'cylinder_end_z': 5.0,
+                             'cylinder_center_x': 6.0,
+                             'cylinder_center_y': 7.0,
+                             'cylinder_radius': 2.6})
+
+    def test_cylinder_fits_inside_image_z_front(self):
+        self.assertRaises(ValueError, nmiq.mask.cylinder_3d,
+                          **{'image_size': (10, 10, 10),
+                             'image_spacing': (1, 1, 1),
+                             'image_origin': (0, 0, 0),
+                             'cylinder_start_z': -0.6,
+                             'cylinder_end_z': 3.0,
+                             'cylinder_center_x': 6.0,
+                             'cylinder_center_y': 6.0,
+                             'cylinder_radius': 2.0})
+
+    def test_cylinder_fits_inside_image_z_back(self):
+        self.assertRaises(ValueError, nmiq.mask.cylinder_3d,
+                          **{'image_size': (10, 10, 10),
+                             'image_spacing': (1, 1, 1),
+                             'image_origin': (0, 0, 0),
+                             'cylinder_start_z': 6.0,
+                             'cylinder_end_z': 9.6,
+                             'cylinder_center_x': 6.0,
+                             'cylinder_center_y': 6.0,
+                             'cylinder_radius': 2.0})
+
+    def test_mask_values(self):
+        mask = nmiq.mask.cylinder_3d(
+            image_size=(10, 10, 10),
+            image_spacing=(1, 1, 1),
+            image_origin=(0, 0, 0),
+            cylinder_start_z=2.0,
+            cylinder_end_z=3.0,
+            cylinder_center_x=2.0,
+            cylinder_center_y=3.0,
+            cylinder_radius=1.5,
+        )
+
+        self.assertFalse(np.any(mask[:, :, 0]))
+        self.assertFalse(np.any(mask[:, :, 1]))
+
+        self.assertEqual(mask[0, 0, 2], 0)
+        self.assertEqual(mask[1, 0, 2], 0)
+        self.assertEqual(mask[2, 0, 2], 0)
+        self.assertEqual(mask[3, 0, 2], 0)
+        self.assertEqual(mask[4, 0, 2], 0)
+        self.assertEqual(mask[5, 0, 2], 0)
+        self.assertEqual(mask[6, 0, 2], 0)
+        self.assertEqual(mask[7, 0, 2], 0)
+        self.assertEqual(mask[8, 0, 2], 0)
+        self.assertEqual(mask[9, 0, 2], 0)
+
+        self.assertEqual(mask[0, 1, 2], 0)
+        self.assertEqual(mask[1, 1, 2], 0)
+        self.assertEqual(mask[2, 1, 2], 0)
+        self.assertEqual(mask[3, 1, 2], 0)
+        self.assertEqual(mask[4, 1, 2], 0)
+        self.assertEqual(mask[5, 1, 2], 0)
+        self.assertEqual(mask[6, 1, 2], 0)
+        self.assertEqual(mask[7, 1, 2], 0)
+        self.assertEqual(mask[8, 1, 2], 0)
+        self.assertEqual(mask[9, 1, 2], 0)
+
+        self.assertEqual(mask[0, 2, 2], 0)
+        self.assertEqual(mask[1, 2, 2], 1)
+        self.assertEqual(mask[2, 2, 2], 1)
+        self.assertEqual(mask[3, 2, 2], 1)
+        self.assertEqual(mask[4, 2, 2], 0)
+        self.assertEqual(mask[5, 2, 2], 0)
+        self.assertEqual(mask[6, 2, 2], 0)
+        self.assertEqual(mask[7, 2, 2], 0)
+        self.assertEqual(mask[8, 2, 2], 0)
+        self.assertEqual(mask[9, 2, 2], 0)
+
+        self.assertEqual(mask[0, 3, 2], 0)
+        self.assertEqual(mask[1, 3, 2], 1)
+        self.assertEqual(mask[2, 3, 2], 1)
+        self.assertEqual(mask[3, 3, 2], 1)
+        self.assertEqual(mask[4, 3, 2], 0)
+        self.assertEqual(mask[5, 3, 2], 0)
+        self.assertEqual(mask[6, 3, 2], 0)
+        self.assertEqual(mask[7, 3, 2], 0)
+        self.assertEqual(mask[8, 3, 2], 0)
+        self.assertEqual(mask[9, 3, 2], 0)
+
+        self.assertEqual(mask[0, 4, 2], 0)
+        self.assertEqual(mask[1, 4, 2], 1)
+        self.assertEqual(mask[2, 4, 2], 1)
+        self.assertEqual(mask[3, 4, 2], 1)
+        self.assertEqual(mask[4, 4, 2], 0)
+        self.assertEqual(mask[5, 4, 2], 0)
+        self.assertEqual(mask[6, 4, 2], 0)
+        self.assertEqual(mask[7, 4, 2], 0)
+        self.assertEqual(mask[8, 4, 2], 0)
+        self.assertEqual(mask[9, 4, 2], 0)
+
+        self.assertEqual(mask[0, 5, 2], 0)
+        self.assertEqual(mask[1, 5, 2], 0)
+        self.assertEqual(mask[2, 5, 2], 0)
+        self.assertEqual(mask[3, 5, 2], 0)
+        self.assertEqual(mask[4, 5, 2], 0)
+        self.assertEqual(mask[5, 5, 2], 0)
+        self.assertEqual(mask[6, 5, 2], 0)
+        self.assertEqual(mask[7, 5, 2], 0)
+        self.assertEqual(mask[8, 5, 2], 0)
+        self.assertEqual(mask[9, 5, 2], 0)
+
+        self.assertEqual(mask[0, 6, 2], 0)
+        self.assertEqual(mask[1, 6, 2], 0)
+        self.assertEqual(mask[2, 6, 2], 0)
+        self.assertEqual(mask[3, 6, 2], 0)
+        self.assertEqual(mask[4, 6, 2], 0)
+        self.assertEqual(mask[5, 6, 2], 0)
+        self.assertEqual(mask[6, 6, 2], 0)
+        self.assertEqual(mask[7, 6, 2], 0)
+        self.assertEqual(mask[8, 6, 2], 0)
+        self.assertEqual(mask[9, 6, 2], 0)
+
+        self.assertEqual(mask[0, 7, 2], 0)
+        self.assertEqual(mask[1, 7, 2], 0)
+        self.assertEqual(mask[2, 7, 2], 0)
+        self.assertEqual(mask[3, 7, 2], 0)
+        self.assertEqual(mask[4, 7, 2], 0)
+        self.assertEqual(mask[5, 7, 2], 0)
+        self.assertEqual(mask[6, 7, 2], 0)
+        self.assertEqual(mask[7, 7, 2], 0)
+        self.assertEqual(mask[8, 7, 2], 0)
+        self.assertEqual(mask[9, 7, 2], 0)
+
+        self.assertEqual(mask[0, 8, 2], 0)
+        self.assertEqual(mask[1, 8, 2], 0)
+        self.assertEqual(mask[2, 8, 2], 0)
+        self.assertEqual(mask[3, 8, 2], 0)
+        self.assertEqual(mask[4, 8, 2], 0)
+        self.assertEqual(mask[5, 8, 2], 0)
+        self.assertEqual(mask[6, 8, 2], 0)
+        self.assertEqual(mask[7, 8, 2], 0)
+        self.assertEqual(mask[8, 8, 2], 0)
+        self.assertEqual(mask[9, 8, 2], 0)
+
+        self.assertEqual(mask[0, 9, 2], 0)
+        self.assertEqual(mask[1, 9, 2], 0)
+        self.assertEqual(mask[2, 9, 2], 0)
+        self.assertEqual(mask[3, 9, 2], 0)
+        self.assertEqual(mask[4, 9, 2], 0)
+        self.assertEqual(mask[5, 9, 2], 0)
+        self.assertEqual(mask[6, 9, 2], 0)
+        self.assertEqual(mask[7, 9, 2], 0)
+        self.assertEqual(mask[8, 9, 2], 0)
+        self.assertEqual(mask[9, 9, 2], 0)
+
+        self.assertEqual(mask[0, 0, 3], 0)
+        self.assertEqual(mask[1, 0, 3], 0)
+        self.assertEqual(mask[2, 0, 3], 0)
+        self.assertEqual(mask[3, 0, 3], 0)
+        self.assertEqual(mask[4, 0, 3], 0)
+        self.assertEqual(mask[5, 0, 3], 0)
+        self.assertEqual(mask[6, 0, 3], 0)
+        self.assertEqual(mask[7, 0, 3], 0)
+        self.assertEqual(mask[8, 0, 3], 0)
+        self.assertEqual(mask[9, 0, 3], 0)
+
+        self.assertEqual(mask[0, 1, 3], 0)
+        self.assertEqual(mask[1, 1, 3], 0)
+        self.assertEqual(mask[2, 1, 3], 0)
+        self.assertEqual(mask[3, 1, 3], 0)
+        self.assertEqual(mask[4, 1, 3], 0)
+        self.assertEqual(mask[5, 1, 3], 0)
+        self.assertEqual(mask[6, 1, 3], 0)
+        self.assertEqual(mask[7, 1, 3], 0)
+        self.assertEqual(mask[8, 1, 3], 0)
+        self.assertEqual(mask[9, 1, 3], 0)
+
+        self.assertEqual(mask[0, 2, 3], 0)
+        self.assertEqual(mask[1, 2, 3], 1)
+        self.assertEqual(mask[2, 2, 3], 1)
+        self.assertEqual(mask[3, 2, 3], 1)
+        self.assertEqual(mask[4, 2, 3], 0)
+        self.assertEqual(mask[5, 2, 3], 0)
+        self.assertEqual(mask[6, 2, 3], 0)
+        self.assertEqual(mask[7, 2, 3], 0)
+        self.assertEqual(mask[8, 2, 3], 0)
+        self.assertEqual(mask[9, 2, 3], 0)
+
+        self.assertEqual(mask[0, 3, 3], 0)
+        self.assertEqual(mask[1, 3, 3], 1)
+        self.assertEqual(mask[2, 3, 3], 1)
+        self.assertEqual(mask[3, 3, 3], 1)
+        self.assertEqual(mask[4, 3, 3], 0)
+        self.assertEqual(mask[5, 3, 3], 0)
+        self.assertEqual(mask[6, 3, 3], 0)
+        self.assertEqual(mask[7, 3, 3], 0)
+        self.assertEqual(mask[8, 3, 3], 0)
+        self.assertEqual(mask[9, 3, 3], 0)
+
+        self.assertEqual(mask[0, 4, 3], 0)
+        self.assertEqual(mask[1, 4, 3], 1)
+        self.assertEqual(mask[2, 4, 3], 1)
+        self.assertEqual(mask[3, 4, 3], 1)
+        self.assertEqual(mask[4, 4, 3], 0)
+        self.assertEqual(mask[5, 4, 3], 0)
+        self.assertEqual(mask[6, 4, 3], 0)
+        self.assertEqual(mask[7, 4, 3], 0)
+        self.assertEqual(mask[8, 4, 3], 0)
+        self.assertEqual(mask[9, 4, 3], 0)
+
+        self.assertEqual(mask[0, 5, 3], 0)
+        self.assertEqual(mask[1, 5, 3], 0)
+        self.assertEqual(mask[2, 5, 3], 0)
+        self.assertEqual(mask[3, 5, 3], 0)
+        self.assertEqual(mask[4, 5, 3], 0)
+        self.assertEqual(mask[5, 5, 3], 0)
+        self.assertEqual(mask[6, 5, 3], 0)
+        self.assertEqual(mask[7, 5, 3], 0)
+        self.assertEqual(mask[8, 5, 3], 0)
+        self.assertEqual(mask[9, 5, 3], 0)
+
+        self.assertEqual(mask[0, 6, 3], 0)
+        self.assertEqual(mask[1, 6, 3], 0)
+        self.assertEqual(mask[2, 6, 3], 0)
+        self.assertEqual(mask[3, 6, 3], 0)
+        self.assertEqual(mask[4, 6, 3], 0)
+        self.assertEqual(mask[5, 6, 3], 0)
+        self.assertEqual(mask[6, 6, 3], 0)
+        self.assertEqual(mask[7, 6, 3], 0)
+        self.assertEqual(mask[8, 6, 3], 0)
+        self.assertEqual(mask[9, 6, 3], 0)
+
+        self.assertEqual(mask[0, 7, 3], 0)
+        self.assertEqual(mask[1, 7, 3], 0)
+        self.assertEqual(mask[2, 7, 3], 0)
+        self.assertEqual(mask[3, 7, 3], 0)
+        self.assertEqual(mask[4, 7, 3], 0)
+        self.assertEqual(mask[5, 7, 3], 0)
+        self.assertEqual(mask[6, 7, 3], 0)
+        self.assertEqual(mask[7, 7, 3], 0)
+        self.assertEqual(mask[8, 7, 3], 0)
+        self.assertEqual(mask[9, 7, 3], 0)
+
+        self.assertEqual(mask[0, 8, 3], 0)
+        self.assertEqual(mask[1, 8, 3], 0)
+        self.assertEqual(mask[2, 8, 3], 0)
+        self.assertEqual(mask[3, 8, 3], 0)
+        self.assertEqual(mask[4, 8, 3], 0)
+        self.assertEqual(mask[5, 8, 3], 0)
+        self.assertEqual(mask[6, 8, 3], 0)
+        self.assertEqual(mask[7, 8, 3], 0)
+        self.assertEqual(mask[8, 8, 3], 0)
+        self.assertEqual(mask[9, 8, 3], 0)
+
+        self.assertEqual(mask[0, 9, 3], 0)
+        self.assertEqual(mask[1, 9, 3], 0)
+        self.assertEqual(mask[2, 9, 3], 0)
+        self.assertEqual(mask[3, 9, 3], 0)
+        self.assertEqual(mask[4, 9, 3], 0)
+        self.assertEqual(mask[5, 9, 3], 0)
+        self.assertEqual(mask[6, 9, 3], 0)
+        self.assertEqual(mask[7, 9, 3], 0)
+        self.assertEqual(mask[8, 9, 3], 0)
+        self.assertEqual(mask[9, 9, 3], 0)
+
+        self.assertFalse(np.any(mask[:, :, 4]))
+        self.assertFalse(np.any(mask[:, :, 5]))
+        self.assertFalse(np.any(mask[:, :, 6]))
+        self.assertFalse(np.any(mask[:, :, 7]))
+        self.assertFalse(np.any(mask[:, :, 8]))
+        self.assertFalse(np.any(mask[:, :, 9]))
+
+
+class TestHottestCylinder3D(unittest.TestCase):
+
+    def test_mask_size(self):
+        src = sitk.Image((10, 10, 10), sitk.sitkFloat32)
+        src.SetSpacing((1, 1, 1))
+        src.SetOrigin((0, 0, 0))
+        src[2, 3, 2] = 1.0
+        src[2, 3, 3] = 1.1
+        src[2, 3, 4] = 1.2
+        src[2, 3, 5] = 1.1
+        mask = nmiq.mask.hottest_cylinder_3d(
+            image=src,
+            cylinder_start_z=2.0,
+            cylinder_end_z=5.0,
+            cylinder_center_x=2.0,
+            cylinder_center_y=3.0,
+            cylinder_radius=1.0
+        )
+        self.assertEqual(3, mask.GetDimension())
+        self.assertEqual((1, 1, 1), mask.GetSpacing())
+        self.assertEqual((0, 0, 0), mask.GetOrigin())
+        self.assertEqual((10, 10, 10), mask.GetSize())
+
+    def test_mask_size_with_ref(self):
+        src = sitk.Image((10, 10, 10), sitk.sitkFloat32)
+        src.SetSpacing((1, 1, 1))
+        src.SetOrigin((0, 0, 0))
+        src[2, 3, 2] = 1.0
+        src[2, 3, 3] = 1.1
+        src[2, 3, 4] = 1.2
+        src[2, 3, 5] = 1.1
+        mask = nmiq.mask.hottest_cylinder_3d(
+            image=src,
+            mask_size=(20, 20, 20),
+            mask_origin=(-2, -2, -2),
+            mask_spacing=(0.5, 0.5, 0.5),
+            cylinder_start_z=2.0,
+            cylinder_end_z=5.0,
+            cylinder_center_x=2.0,
+            cylinder_center_y=3.0,
+            cylinder_radius=1.0
+        )
+        self.assertEqual(3, mask.GetDimension())
+        self.assertEqual((0.5, 0.5, 0.5), mask.GetSpacing())
+        self.assertEqual((-2.0, -2.0, -2.0), mask.GetOrigin())
+        self.assertEqual((20, 20, 20), mask.GetSize())
+
+    def test_cylinder_fits_inside_image_x_left(self):
+        src = sitk.Image((10, 10, 10), sitk.sitkFloat32)
+        src.SetSpacing((1, 1, 1))
+        src.SetOrigin((0, 0, 0))
+        src[2, 3, 2] = 1.0
+        src[2, 3, 3] = 1.1
+        src[2, 3, 4] = 1.2
+        src[2, 3, 5] = 1.1
+
+        self.assertRaises(ValueError, nmiq.mask.hottest_cylinder_3d,
+                          **{'image': src,
+                             'cylinder_start_z': 2.0,
+                             'cylinder_end_z': 5.0,
+                             'cylinder_center_x': 2.0,
+                             'cylinder_center_y': 3.0,
+                             'cylinder_radius': 2.6})
+
+    def test_cylinder_fits_inside_image_w_ref_x_left(self):
+        src = sitk.Image((10, 10, 10), sitk.sitkFloat32)
+        src.SetSpacing((1, 1, 1))
+        src.SetOrigin((0, 0, 0))
+        src[2, 3, 2] = 1.0
+        src[2, 3, 3] = 1.1
+        src[2, 3, 4] = 1.2
+        src[2, 3, 5] = 1.1
+
+        self.assertRaises(ValueError, nmiq.mask.hottest_cylinder_3d,
+                          **{'image': src,
+                             'cylinder_start_z': 2.0,
+                             'cylinder_end_z': 5.0,
+                             'cylinder_center_x': 2.0,
+                             'cylinder_center_y': 3.0,
+                             'cylinder_radius': 2.6,
+                             'mask_size': (10, 10, 10),
+                             'mask_origin': (-2, -2, 0),
+                             'mask_spacing': (1, 1, 1)})
+
+    def test_cylinder_fits_inside_image_x_right(self):
+        src = sitk.Image((10, 10, 10), sitk.sitkFloat32)
+        src.SetSpacing((1, 1, 1))
+        src.SetOrigin((0, 0, 0))
+        src[8, 3, 2] = 1.0
+        src[8, 3, 3] = 1.1
+        src[8, 3, 4] = 1.2
+        src[8, 3, 5] = 1.1
+
+        self.assertRaises(ValueError, nmiq.mask.hottest_cylinder_3d,
+                          **{'image': src,
+                             'cylinder_start_z': 2.0,
+                             'cylinder_end_z': 5.0,
+                             'cylinder_center_x': 8.0,
+                             'cylinder_center_y': 3.0,
+                             'cylinder_radius': 2.6})
+
+    def test_cylinder_fits_inside_image_y_top(self):
+        src = sitk.Image((10, 10, 10), sitk.sitkFloat32)
+        src.SetSpacing((1, 1, 1))
+        src.SetOrigin((0, 0, 0))
+        src[7, 2, 2] = 1.0
+        src[7, 2, 3] = 1.1
+        src[7, 2, 4] = 1.2
+        src[7, 2, 5] = 1.1
+
+        self.assertRaises(ValueError, nmiq.mask.hottest_cylinder_3d,
+                          **{'image': src,
+                             'cylinder_start_z': 2.0,
+                             'cylinder_end_z': 5.0,
+                             'cylinder_center_x': 7.0,
+                             'cylinder_center_y': 2.0,
+                             'cylinder_radius': 2.6})
+
+    def test_cylinder_fits_inside_image_y_bottom(self):
+        src = sitk.Image((10, 10, 10), sitk.sitkFloat32)
+        src.SetSpacing((1, 1, 1))
+        src.SetOrigin((0, 0, 0))
+        src[6, 7, 2] = 1.0
+        src[6, 7, 3] = 1.1
+        src[6, 7, 4] = 1.2
+        src[6, 7, 5] = 1.1
+
+        self.assertRaises(ValueError, nmiq.mask.hottest_cylinder_3d,
+                          **{'image': src,
+                             'cylinder_start_z': 2.0,
+                             'cylinder_end_z': 5.0,
+                             'cylinder_center_x': 6.0,
+                             'cylinder_center_y': 7.0,
+                             'cylinder_radius': 2.6})
+
+    def test_cylinder_fits_inside_image_z_front(self):
+        src = sitk.Image((10, 10, 10), sitk.sitkFloat32)
+        src.SetSpacing((1, 1, 1))
+        src.SetOrigin((0, 0, 0))
+        src[6, 6, 0] = 1.0
+        src[6, 6, 1] = 1.1
+        src[6, 6, 2] = 1.2
+        src[6, 6, 3] = 1.1
+
+        self.assertRaises(ValueError, nmiq.mask.hottest_cylinder_3d,
+                          **{'image': src,
+                             'cylinder_start_z': -0.6,
+                             'cylinder_end_z': 3.0,
+                             'cylinder_center_x': 6.0,
+                             'cylinder_center_y': 6.0,
+                             'cylinder_radius': 2.0})
+
+    def test_cylinder_fits_inside_image_z_back(self):
+        src = sitk.Image((10, 10, 10), sitk.sitkFloat32)
+        src.SetSpacing((1, 1, 1))
+        src.SetOrigin((0, 0, 0))
+        src[6, 6, 6] = 1.0
+        src[6, 6, 7] = 1.1
+        src[6, 6, 8] = 1.2
+        src[6, 6, 9] = 1.1
+
+        self.assertRaises(ValueError, nmiq.mask.hottest_cylinder_3d,
+                          **{'image': src,
+                             'cylinder_start_z': 6.0,
+                             'cylinder_end_z': 9.5,
+                             'cylinder_center_x': 6.0,
+                             'cylinder_center_y': 6.0,
+                             'cylinder_radius': 2.0})
+
+    def test_mask_correct_values(self):
+        src = sitk.Image((10, 10, 10), sitk.sitkFloat32)
+        src.SetSpacing((1, 1, 1))
+        src.SetOrigin((0, 0, 0))
+        src[6, 6, 2] = 1.0
+        src[6, 7, 3] = 1.1
+        src[7, 6, 4] = 1.2
+        src[7, 6, 5] = 1.1
+        mask = nmiq.mask.hottest_cylinder_3d(
+            image=src,
+            cylinder_start_z=2.0,
+            cylinder_end_z=5.0,
+            cylinder_center_x=6.0,
+            cylinder_center_y=6.0,
+            cylinder_radius=0.9
+        )
+
+        self.assertEqual(np.max(mask[:, :, 0]), 0.0)
+        self.assertEqual(np.max(mask[:, :, 1]), 0.0)
+
+        self.assertEqual(mask[6, 6, 2], 1.0)
+        self.assertEqual(mask[6, 7, 2], 0.0)
+        self.assertEqual(mask[7, 6, 2], 0.0)
+        self.assertEqual(mask[7, 7, 2], 0.0)
+
+        self.assertEqual(mask[6, 6, 3], 0.0)
+        self.assertEqual(mask[6, 7, 3], 1.0)
+        self.assertEqual(mask[7, 6, 3], 0.0)
+        self.assertEqual(mask[7, 7, 3], 0.0)
+
+        self.assertEqual(mask[6, 6, 4], 0.0)
+        self.assertEqual(mask[6, 7, 4], 0.0)
+        self.assertEqual(mask[7, 6, 4], 1.0)
+        self.assertEqual(mask[7, 7, 4], 0.0)
+
+        self.assertEqual(mask[6, 6, 5], 0.0)
+        self.assertEqual(mask[6, 7, 5], 0.0)
+        self.assertEqual(mask[7, 6, 5], 1.0)
+        self.assertEqual(mask[7, 7, 5], 0.0)
+
+        self.assertEqual(np.max(mask[:, :, 6]), 0.0)
+        self.assertEqual(np.max(mask[:, :, 7]), 0.0)
+        self.assertEqual(np.max(mask[:, :, 8]), 0.0)
+        self.assertEqual(np.max(mask[:, :, 9]), 0.0)
+
+    def test_mask_correct_values_2(self):
+        src = sitk.Image((10, 10, 10), sitk.sitkFloat32)
+        src.SetSpacing((1, 1, 1))
+        src.SetOrigin((0, 0, 0))
+
+        src[1, 1, 2] = 1.0
+        src[2, 1, 2] = 2.0
+        src[3, 1, 2] = 2.0
+        src[4, 1, 2] = 3.0
+        src[5, 1, 2] = 2.0
+        src[6, 1, 2] = 3.0
+        src[7, 1, 2] = 1.0
+
+        src[1, 2, 2] = 3.0
+        src[2, 2, 2] = 5.0
+        src[3, 2, 2] = 4.0
+        src[4, 2, 2] = 4.0
+        src[5, 2, 2] = 5.0
+        src[6, 2, 2] = 2.0
+        src[7, 2, 2] = 1.0
+        src[8, 2, 2] = 1.0
+
+        src[1, 3, 2] = 4.0
+        src[2, 3, 2] = 9.0
+        src[3, 3, 2] = 7.0
+        src[4, 3, 2] = 7.0
+        src[5, 3, 2] = 5.0
+        src[6, 3, 2] = 2.0
+        src[7, 3, 2] = 1.0
+        src[8, 3, 2] = 2.0
+
+        src[1, 4, 2] = 3.0
+        src[2, 4, 2] = 5.0
+        src[3, 4, 2] = 8.0
+        src[4, 4, 2] = 8.0
+        src[5, 4, 2] = 3.0
+        src[6, 4, 2] = 4.0
+        src[7, 4, 2] = 3.0
+        src[8, 4, 2] = 1.0
+
+        src[1, 5, 2] = 5.0
+        src[2, 5, 2] = 6.0
+        src[3, 5, 2] = 9.0
+        src[4, 5, 2] = 6.0
+        src[5, 5, 2] = 5.0
+        src[6, 5, 2] = 5.0
+        src[7, 5, 2] = 4.0
+        src[8, 5, 2] = 2.0
+
+        src[1, 6, 2] = 3.0
+        src[2, 6, 2] = 4.0
+        src[3, 6, 2] = 3.0
+        src[4, 6, 2] = 5.0
+        src[5, 6, 2] = 3.0
+        src[6, 6, 2] = 2.0
+        src[7, 6, 2] = 1.0
+
+        src[1, 7, 2] = 2.0
+        src[2, 7, 2] = 3.0
+        src[3, 7, 2] = 1.0
+        src[4, 7, 2] = 2.0
+        src[5, 7, 2] = 1.0
+        src[6, 7, 2] = 2.0
+        src[7, 7, 2] = 2.0
+
+        src[2, 8, 2] = 1.0
+        src[3, 8, 2] = 2.0
+        src[4, 8, 2] = 1.0
+        src[5, 8, 2] = 1.0
+
+        mask = nmiq.mask.hottest_cylinder_3d(
+            image=src,
+            cylinder_start_z=2.0,
+            cylinder_end_z=2.1,
+            cylinder_center_x=2.0,
+            cylinder_center_y=3.0,
+            cylinder_radius=1.5
+        )
+
+        self.assertEqual(3, mask.GetDimension())
+        self.assertEqual((1, 1, 1), mask.GetSpacing())
+        self.assertEqual((0, 0, 0), mask.GetOrigin())
+        self.assertEqual((10, 10, 10), mask.GetSize())
+
+        data = sitk.GetArrayFromImage(mask)
+
+        self.assertEqual(np.max(mask[0, :, :]), 0.0)
+        self.assertEqual(np.max(mask[1, :, :]), 0.0)
+
+        self.assertEqual(np.max(data[2, 0, :]), 0)
+        self.assertEqual(np.max(data[2, 1, :]), 0)
+        self.assertEqual(np.max(data[2, 2, :]), 0)
+        self.assertEqual(mask[0, 3, 2], 0)
+        self.assertEqual(mask[1, 3, 2], 0)
+        self.assertEqual(mask[2, 3, 2], 1)
+        self.assertEqual(mask[3, 3, 2], 1)
+        self.assertEqual(mask[4, 3, 2], 1)
+        self.assertEqual(mask[5, 3, 2], 0)
+        self.assertEqual(mask[6, 3, 2], 0)
+        self.assertEqual(mask[7, 3, 2], 0)
+        self.assertEqual(mask[8, 3, 2], 0)
+        self.assertEqual(mask[9, 3, 2], 0)
+        self.assertEqual(mask[0, 4, 2], 0)
+        self.assertEqual(mask[1, 4, 2], 0)
+        self.assertEqual(mask[2, 4, 2], 1)
+        self.assertEqual(mask[3, 4, 2], 1)
+        self.assertEqual(mask[4, 4, 2], 1)
+        self.assertEqual(mask[5, 4, 2], 0)
+        self.assertEqual(mask[6, 4, 2], 0)
+        self.assertEqual(mask[7, 4, 2], 0)
+        self.assertEqual(mask[8, 4, 2], 0)
+        self.assertEqual(mask[9, 4, 2], 0)
+        self.assertEqual(mask[0, 5, 2], 0)
+        self.assertEqual(mask[1, 5, 2], 0)
+        self.assertEqual(mask[2, 5, 2], 1)
+        self.assertEqual(mask[3, 5, 2], 1)
+        self.assertEqual(mask[4, 5, 2], 1)
+        self.assertEqual(mask[5, 5, 2], 0)
+        self.assertEqual(mask[6, 5, 2], 0)
+        self.assertEqual(mask[7, 5, 2], 0)
+        self.assertEqual(mask[8, 5, 2], 0)
+        self.assertEqual(mask[9, 5, 2], 0)
+        self.assertEqual(np.max(data[2, 6, :]), 0)
+        self.assertEqual(np.max(data[2, 7, :]), 0)
+        self.assertEqual(np.max(data[2, 8, :]), 0)
+        self.assertEqual(np.max(data[2, 9, :]), 0)
+
+        self.assertEqual(np.max(mask[:, :, 3]), 0.0)
+        self.assertEqual(np.max(mask[:, :, 4]), 0.0)
+        self.assertEqual(np.max(mask[:, :, 5]), 0.0)
+        self.assertEqual(np.max(mask[:, :, 6]), 0.0)
+        self.assertEqual(np.max(mask[:, :, 7]), 0.0)
+        self.assertEqual(np.max(mask[:, :, 8]), 0.0)
+        self.assertEqual(np.max(mask[:, :, 9]), 0.0)

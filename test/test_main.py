@@ -90,3 +90,60 @@ class TestLSF_main(unittest.TestCase):
             os.remove(os.path.join('test', 'lsf_res.txt'))
         if os.path.exists(os.path.join('test', 'fwhm.png')):
             os.remove(os.path.join('test', 'fwhm.png'))
+
+
+class TestContrastCyl3D_main(unittest.TestCase):
+
+    def test_contrast_files(self):
+
+        img_path = os.path.join(
+            'test', 'data', 'cyl',
+            'Patient_phantomg9_220925_Study_6_Scan_5_Bed_1_Dyn_20.dcm')
+        out_path = os.path.join('test')
+
+        __main__.main(['contrast_cyl3d', '-i', img_path, '-o', out_path,
+                       '--start_z', '1146', '--end_z', '1275',
+                       '--cyl_center_x', '2.0',
+                       '--cyl_center_y', '63.3',
+                       '--bkg_center_x', '3.1',
+                       '--bkg_center_y', '24.3',
+                       '--cyl_radius', '12.0'])
+
+        self.assertTrue(
+            os.path.isfile(os.path.join(
+                out_path, 'contrast_cyl3d_hot.nii.gz')))
+        self.assertTrue(
+            os.path.isfile(os.path.join(
+                out_path, 'contrast_cyl3d_bkg.nii.gz')))
+        self.assertTrue(
+            os.path.isfile(os.path.join(out_path, 'contrast_cyl3d_res.txt')))
+
+    def test_use_unresampled_for_search(self):
+
+        img_path = os.path.join(
+            'test', 'data', 'cyl',
+            'Patient_phantomg9_220925_Study_6_Scan_5_Bed_1_Dyn_20.dcm')
+        out_path = os.path.join('test')
+
+        __main__.main(['contrast_cyl3d', '-i', img_path, '-o', out_path,
+                       '--resample', '1,1,0',
+                       '--start_z', '1156.2', '--end_z', '1190.7',
+                       '--cyl_center_x', '6.3',
+                       '--cyl_center_y', '57.3',
+                       '--bkg_center_x', '5.4',
+                       '--bkg_center_y', '-43.0',
+                       '--cyl_radius', '12.0'])
+
+        mask_hot = sitk.ReadImage(
+            os.path.join(out_path, 'contrast_cyl3d_hot.nii.gz'))
+
+        self.assertEqual(0, mask_hot[309, 355, 27])
+        self.assertEqual(1, mask_hot[310, 355, 27])
+
+    def tearDown(self):
+        if os.path.exists(os.path.join('test', 'contrast_cyl3d_hot.nii.gz')):
+            os.remove(os.path.join('test', 'contrast_cyl3d_hot.nii.gz'))
+        if os.path.exists(os.path.join('test', 'contrast_cyl3d_bkg.nii.gz')):
+            os.remove(os.path.join('test', 'contrast_cyl3d_bkg.nii.gz'))
+        if os.path.exists(os.path.join('test', 'contrast_cyl3d_res.txt')):
+            os.remove(os.path.join('test', 'contrast_cyl3d_res.txt'))
