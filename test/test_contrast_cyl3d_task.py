@@ -146,7 +146,6 @@ class TestContrastCyl3D_task(unittest.TestCase):
             self.assertEqual("Contrast:", line0[0])
             self.assertAlmostEqual(9.0, float(line0[1]), places=6)
 
-
     def tearDown(self):
         if os.path.exists(os.path.join('test', 'contrast_cyl3d_hot.nii.gz')):
             os.remove(os.path.join('test', 'contrast_cyl3d_hot.nii.gz'))

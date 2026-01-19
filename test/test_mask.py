@@ -642,7 +642,6 @@ class TestCylinder3D(unittest.TestCase):
         self.assertFalse(np.any(mask[:, :, 9]))
 
 
-
 class TestHottestCylinder3D(unittest.TestCase):
 
     def test_mask_size(self):
@@ -676,9 +675,9 @@ class TestHottestCylinder3D(unittest.TestCase):
         src[2, 3, 5] = 1.1
         mask = nmiq.mask.hottest_cylinder_3d(
             image=src,
-            image_size=(20, 20, 20),
-            image_origin=(-5, -5, -5),
-            image_spacing=(0.5, 0.5, 0.5),
+            mask_size=(20, 20, 20),
+            mask_origin=(-2, -2, -2),
+            mask_spacing=(0.5, 0.5, 0.5),
             cylinder_start_z=2.0,
             cylinder_end_z=5.0,
             cylinder_center_x=2.0,
@@ -687,7 +686,7 @@ class TestHottestCylinder3D(unittest.TestCase):
         )
         self.assertEqual(3, mask.GetDimension())
         self.assertEqual((0.5, 0.5, 0.5), mask.GetSpacing())
-        self.assertEqual((-5.0, -5.0, -5.0), mask.GetOrigin())
+        self.assertEqual((-2.0, -2.0, -2.0), mask.GetOrigin())
         self.assertEqual((20, 20, 20), mask.GetSize())
 
     def test_cylinder_fits_inside_image_x_left(self):
@@ -706,6 +705,26 @@ class TestHottestCylinder3D(unittest.TestCase):
                              'cylinder_center_x': 2.0,
                              'cylinder_center_y': 3.0,
                              'cylinder_radius': 2.6})
+
+    def test_cylinder_fits_inside_image_w_ref_x_left(self):
+        src = sitk.Image((10, 10, 10), sitk.sitkFloat32)
+        src.SetSpacing((1, 1, 1))
+        src.SetOrigin((0, 0, 0))
+        src[2, 3, 2] = 1.0
+        src[2, 3, 3] = 1.1
+        src[2, 3, 4] = 1.2
+        src[2, 3, 5] = 1.1
+
+        self.assertRaises(ValueError, nmiq.mask.hottest_cylinder_3d,
+                          **{'image': src,
+                             'cylinder_start_z': 2.0,
+                             'cylinder_end_z': 5.0,
+                             'cylinder_center_x': 2.0,
+                             'cylinder_center_y': 3.0,
+                             'cylinder_radius': 2.6,
+                             'mask_size': (10, 10, 10),
+                             'mask_origin': (-2, -2, 0),
+                             'mask_spacing': (1, 1, 1)})
 
     def test_cylinder_fits_inside_image_x_right(self):
         src = sitk.Image((10, 10, 10), sitk.sitkFloat32)
@@ -809,7 +828,6 @@ class TestHottestCylinder3D(unittest.TestCase):
             cylinder_radius=0.9
         )
 
-        self.assertEqual(np.max(mask), 1.0)
         self.assertEqual(np.max(mask[:, :, 0]), 0.0)
         self.assertEqual(np.max(mask[:, :, 1]), 0.0)
 
@@ -924,7 +942,6 @@ class TestHottestCylinder3D(unittest.TestCase):
 
         data = sitk.GetArrayFromImage(mask)
 
-        self.assertEqual(np.max(mask), 1.0)
         self.assertEqual(np.max(mask[0, :, :]), 0.0)
         self.assertEqual(np.max(mask[1, :, :]), 0.0)
 

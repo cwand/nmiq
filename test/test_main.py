@@ -137,7 +137,8 @@ class TestContrastCyl3D_main(unittest.TestCase):
         mask_hot = sitk.ReadImage(
             os.path.join(out_path, 'contrast_cyl3d_hot.nii.gz'))
 
-        self.assertEqual(0, mask_hot[327, 350, 27])
+        self.assertEqual(0, mask_hot[309, 355, 27])
+        self.assertEqual(1, mask_hot[310, 355, 27])
 
     def tearDown(self):
         if os.path.exists(os.path.join('test', 'contrast_cyl3d_hot.nii.gz')):
