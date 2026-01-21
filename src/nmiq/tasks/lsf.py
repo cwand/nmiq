@@ -186,6 +186,7 @@ def lsf(task_dict: dict[str, Any]):
     fig.supylabel('Voxel intensity')
     plt.tight_layout()
     plt.savefig(os.path.join(task_dict['output_path'], 'fwhm.png'))
+    plt.close()
 
     # Calculate mean and standard error on fwhm estimates
     nema_fwhm_mean = np.mean(nema_fwhms)
