@@ -143,3 +143,35 @@ This will run the task with the following setup:
 * The second line source will be measured in the $y$-direction with the correct $x$-index being automatically found within a 30mm distance from the center voxel
 * The line profiles will include all voxels within 30mm from the center voxels.
 * The numerical results and an image file showing the fits will be put in the ```res```-folder.
+
+
+#### contrast_cyl3d
+
+This task measures contrast between a hot cylinder and background. The task
+assumes that the cylinder lies in the $z$-direction in the image. The geometry
+of the cylinder is given to the task as input. On each image slice in the 
+desired region, a circular ROI is automatically drawn to maximise the ROI
+signal, i.e. the hottest circle on each slice will be taken as the hot cylinder.
+The background cylinder is just a straight cylinder.
+
+In case the image has been resampled by the ```--resample``` option, the
+algorithm searching for the maximal ROI signal on each slice will use the
+original image. This speeds up the algorithm and avoids problems with the algorithm
+getting stuck because of the nearest neighbour resampling. The actual mask will
+have the same geometry as the resampled image.
+
+Resampling the image to a resolution at least 10 times smaller than the desired
+cylinder radius is recommended in order to get a good circular ROI.
+
+Syntax:
+```
+> python -m nmiq contrast_cyl3d -i img.dcm -o res --resample 1.0,1.0,0 --start_z 500.0 --end_z 700.0 --cylinder_center_x 20.0 --cylinder_center_y 30.0 --background_center_x 30.0 --background_center_y 0.0 --cylinder_radius 10.0
+```
+This will run the task with the following setup:
+* The image will be loaded from the file ```img.dcm```
+* The image will be resampled to a voxel spacing of 1mm in both $x$- and $y$-direction.
+* The cylinder region will go from $z=500$ to $z=700$
+* The hot cylinder lies at approximately $(x,y)=(20, 30)$, but will be found slice by slice in the cylinder region
+* The background is evaluated at $(x,y)=(30, 0)$.
+* The cylinder radius is 10mm
+* Output (mask images and result file) will be put in the ```res```-folder 
